@@ -25,8 +25,8 @@ This document describes the current design. Features that have not been verified
 
 The Cairo HQ core layer consists of:
 
-- CORE-1
-- CORE-2
+- HQ-CORE-01
+- HQ-CORE-02
 
 The design uses VLANs, 802.1Q trunking, EtherChannel, spanning tree, HSRP, Layer 3 SVIs, DHCP relay, and OSPF.
 
@@ -217,7 +217,7 @@ VMnet8 is treated as the external Internet connection for the lab; no additional
 
 ## 9. Verification Checklist
 
-- [ ] Verify CORE-1 and CORE-2 transit interfaces and physical mappings.
+- [ ] Verify HQ-CORE-01 and HQ-CORE-02 transit interfaces and physical mappings.
 - [ ] Verify FortiGate HA health and synchronization.
 - [ ] Confirm DMZ interface assignments and WEB01 connectivity.
 - [ ] Test WAN1/WAN2 routing and failover.
