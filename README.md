@@ -6,7 +6,7 @@ The lab models a multi-site enterprise infrastructure connecting Cairo Headquart
 
 ## Network Topology
 
-![Enterprise Multi-Site Network Topology](Images/topology-overview.png)
+![Enterprise Multi-Site Network Topology](Images/Topology-overview.png)
 
 *Enterprise network topology showing the Cairo HQ and Alexandria Branch infrastructure.*
 
