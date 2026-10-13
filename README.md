@@ -134,4 +134,3 @@ This is a virtual lab developed for educational purposes, technical practice, an
 ## Project Status
 
 This repository documents the network design and the verification evidence collected so far. Implementation status is described conservatively, and additional test evidence will be added as the remaining functionality is validated.
-
