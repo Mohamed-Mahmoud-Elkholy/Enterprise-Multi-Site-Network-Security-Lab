@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Cairo Headquarters lab is designed with two simulated ISP connections to provide redundant Internet connectivity.
+The Cairo Headquarters lab is designed with two simulated ISP connections to provide redundant Internet connectivity through the FortiGate firewall.
 
 ## WAN Addressing
 
@@ -13,24 +13,38 @@ The Cairo Headquarters lab is designed with two simulated ISP connections to pro
 | FortiGate IP | `198.51.100.2/29` | `203.0.113.2/29` |
 | Monitoring Target | `198.51.100.250` | `203.0.113.250` |
 
-These addresses describe the planned lab addressing. The current interface configuration and connectivity must be checked against the running devices.
+These addresses represent the planned lab addressing. The running configuration and actual connectivity must be verified against the devices before operational status is claimed.
 
 ## Verification Requirements
 
-The following tests are required before dual-WAN redundancy can be considered validated:
+The following tests are required to validate dual-WAN redundancy:
 
 - Verify that each FortiGate WAN interface can reach its ISP gateway.
-- Verify reachability of the configured monitoring target through the correct WAN path.
+- Verify that each monitoring target is reachable through its intended WAN interface.
 - Confirm the active default route under normal conditions.
-- Disconnect or disable the primary WAN in a controlled test.
-- Confirm that Internet connectivity recovers through the backup WAN.
+- Disable the primary WAN in a controlled test.
+- Confirm that the default route and Internet connectivity recover through the backup WAN.
 - Restore the primary WAN and verify route recovery.
-- Record the routing table and connectivity test results for each state.
+- Capture routing and connectivity evidence for each test state.
 
 ## Current Status
 
-Dual-WAN failover is **not confirmed by this document**. Successful failover must be supported by collected routing and connectivity evidence.
+**Status: Not yet validated.**
+
+The lab design includes two simulated ISP connections, but successful dual-WAN failover has not been established by the evidence documented here.
+
+A successful ping to an internal FortiGate transit address does not prove that either WAN connection or Internet failover is working.
+
+## Evidence Requirements
+
+Before marking dual-WAN failover as verified, collect:
+
+- FortiGate WAN interface status and addressing.
+- Link-monitor status for both WAN connections.
+- The routing table before and after the controlled failover.
+- Connectivity test results before, during, and after failover.
+- Confirmation that the primary WAN resumes service after restoration.
 
 ## Conclusion
 
-The lab includes a dual-WAN design intended to provide Internet-path redundancy. Operational failover remains subject to testing and verification.
+The Cairo Headquarters topology is designed for Internet-path redundancy using WAN1 and WAN2. Operational failover remains unverified until the required connectivity, monitoring, and routing tests are completed and documented.
