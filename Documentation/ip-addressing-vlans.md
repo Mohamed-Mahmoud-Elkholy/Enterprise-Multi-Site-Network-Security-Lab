@@ -24,6 +24,7 @@ The Cairo VLAN networks are summarized as `192.168.0.0/25` in the routing design
 ## 2. Cairo HQ — Core Switching
 
 Documented switching features:
+
 - VLANs 10, 20, 30, 40, 50, 60, 70, and 99
 - 802.1Q trunking
 - EtherChannel using LACP
@@ -67,6 +68,7 @@ The supplied HQ-CORE-01 configuration contains SVI VLAN 901 at `192.168.0.129/30
 ## 4. Cairo HQ — FortiGate HA
 
 ### HA Design
+
 - Devices: `FG-HQ-01` and `FG-HQ-02`
 - HA mode: Active-Passive
 - Heartbeat interfaces: ports 3 and 4
@@ -155,9 +157,12 @@ The Alexandria VLAN plan follows the supplied ALEX-CORE running configuration an
 
 The supplied ALEX-CORE output shows VLAN 10, 20, 30, and 99 SVIs as `down/down`. The VLANs exist, but operational Layer 3 connectivity was not demonstrated by that output.
 
+The latest supplied configuration snippet confirms that `interface Vlan20` on ALEX-CORE has address `10.10.0.130 255.255.255.224`. This matches the addressing table above. That snippet does not show the interface operational state.
+
 ## 8. Alexandria Branch — OSPF
 
 The supplied ALEX-CORE configuration contains:
+
 - OSPF process: 1
 - Router ID: `5.5.5.5`
 - Local area: Area 2
@@ -232,6 +237,7 @@ DHCP scopes must respect each VLAN subnet and exclude gateways, server addresses
 ## 14. Routing and Redundancy Design
 
 The intended routing architecture includes:
+
 - Cairo core VLAN routing in OSPF Area 1
 - Cairo core-to-firewall transit links in Area 0
 - Alexandria local routing in Area 2
@@ -249,6 +255,7 @@ This section describes the intended design. Actual adjacency, route propagation,
 ## 15. Removed or Superseded Entries
 
 The following items are not part of the current design:
+
 - Old management network `192.168.1.16/28` and addresses `.17`–`.20`
 - Transit network `192.168.0.132/30`
 - Transit network `192.168.0.140/30`
