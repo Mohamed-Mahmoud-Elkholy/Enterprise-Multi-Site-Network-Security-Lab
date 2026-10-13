@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Cairo Headquarters security infrastructure uses two FortiGate VM64-KVM appliances configured in Active-Passive High Availability (HA) mode.
+The Cairo Headquarters lab uses two FortiGate VM64-KVM appliances configured in Active-Passive (A-P) High Availability mode.
 
 ## Cluster Members
 
@@ -11,27 +11,39 @@ The Cairo Headquarters security infrastructure uses two FortiGate VM64-KVM appli
 | HA Role | Primary | Secondary |
 | Cluster Index | 0 | 1 |
 | Configuration Status | In-sync | In-sync |
-| HA Heartbeat Interfaces | port3, port4 | port3, port4 |
+| Heartbeat Interfaces | port3, port4 | port3, port4 |
+| Monitored Interfaces | port1, port2, port5, port6 | port1, port2, port5, port6 |
+| Dedicated Management Interface | port8 | port8 |
 
-## Verification Results
+## Current Verification Results
 
 The following results were observed during verification:
 
 - HA health status reported `OK`.
 - Both cluster members were visible in the HA status output.
-- `FG-HQ-1` was the current Primary.
-- `FG-HQ-2` was the current Secondary.
+- `FG-HQ-1` was Primary and `FG-HQ-2` was Secondary.
 - Both members reported `in-sync`.
-- Heartbeat interfaces `port3` and `port4` were reported as up on both members.
-- Monitored interfaces `port1`, `port2`, `port5`, and `port6` were reported as up on both members.
+- Heartbeat interfaces `port3` and `port4` were up on both appliances.
+- Both heartbeat interfaces reported zero RX drops, RX errors, and TX errors in the collected interface statistics.
+- Monitored interfaces `port1`, `port2`, `port5`, and `port6` were up in the collected HA status output.
+
+## Historical HA Events
+
+The HA history contains previous events in which `FG-HQ-2` lost heartbeat connectivity on `port3` and `port4`. The primary appliance subsequently operated as the only cluster member during some of these events.
+
+The available evidence does not establish the root cause of these historical events.
+
+Although the heartbeat links and their interface counters looked healthy during the latest checks, this does not prove that the historical interruptions have been permanently resolved.
 
 ## Failover Validation
 
-**Status: Not yet tested.**
+**Status: Not yet formally validated.**
 
-The collected output confirms the current HA cluster status and configuration synchronization. It does not prove that traffic successfully transfers to the Secondary during a Primary failure.
+The current evidence confirms the cluster's observed health, member roles, configuration synchronization, and heartbeat interface status.
 
-A controlled failover test is required before operational HA failover can be considered verified.
+It does not establish that production traffic successfully transfers to `FG-HQ-2` during a controlled failure of `FG-HQ-1`.
+
+A controlled failover test must be completed before operational HA failover can be marked as verified.
 
 ## Evidence
 
@@ -39,6 +51,8 @@ A controlled failover test is required before operational HA failover can be con
 - `Images/FG-HQ-HA-Status-Secondary.png`
 - `Images/FG-HQ-HA-Status-In-Sync.png`
 
+Ensure that the filenames above match the actual files committed to the repository.
+
 ## Conclusion
 
-The FortiGate HA cluster was observed in a healthy state with both members synchronized. Actual failover behavior remains unverified pending a controlled test.
+The FortiGate Active-Passive cluster was observed in a healthy, synchronized state. Both heartbeat interfaces were up on both appliances during verification. Historical heartbeat interruptions remain unexplained, and successful controlled failover is still unverified.
