@@ -72,6 +72,8 @@ This confirms observed IPsec SA activity, but does not by itself establish end-t
 | [IP Addressing and VLANs](Documentation/ip-addressing-vlans.md) | VLAN IDs, subnets, and gateway addressing |
 | [Network Topology and Architecture](Documentation/network-topology.md) | Site architecture, device roles, routing design, and planned connectivity |
 | [Routing Verification](Verification/routing.md) | Collected routing and OSPF evidence |
+| [IPsec VPN Verification](Verification/ipsec-vpn.md) | Observed IPsec activity and outstanding VPN tests |
+| [Dual-WAN Verification](Verification/dual-wan-verification.md) | WAN addressing and outstanding failover tests |
 
 ## Verification Evidence
 
@@ -86,6 +88,8 @@ The collected outputs from `HQ-CORE-01`, `FG-HQ-01`, and `FG-ALEX-01` show:
 - Routes to remote Alexandria networks and the legacy routing prefix.
 - OSPF-learned routes for the inter-site tunnel endpoint addresses.
 - OSPF neighbor relationships across the two displayed IPsec tunnel interfaces on `FG-ALEX-01`.
+
+These observations describe the command outputs collected at the time of testing. They do not independently prove end-to-end connectivity or complete routing redundancy.
 
 ### IPsec Tunnels
 
@@ -111,16 +115,21 @@ The following require additional evidence before being described as successfully
 Enterprise-Multi-Site-Network-Security-Lab/
 ├── README.md
 ├── Images/
+│   ├── .gitkeep
 │   └── Topology-overview.png
 ├── Documentation/
 │   ├── ip-addressing-vlans.md
 │   └── network-topology.md
 ├── configs/
+│   ├── .gitkeep
+│   └── README.md
 └── Verification/
+    ├── dual-wan-verification.md
+    ├── ipsec-vpn.md
     └── routing.md
 ```
 
-The structure above reflects the documented project layout. The contents of `configs/` should be added to this tree only after the actual configuration files have been collected and sanitized.
+The `configs/` directory is reserved for sanitized device configurations collected from the running lab. No actual device configuration files have been added yet.
 
 ## Security and Lab Disclaimer
 
