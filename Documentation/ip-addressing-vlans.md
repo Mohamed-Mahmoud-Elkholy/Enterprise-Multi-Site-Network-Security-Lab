@@ -31,9 +31,9 @@ Documented switching features:
 - HSRP gateway redundancy
 - Layer 3 SVIs and DHCP relay
 
-### HSRP Status Recorded for CORE-1
+### HSRP Status Recorded for HQ-CORE-01
 
-| VLAN | CORE-1 Priority | Recorded State | Virtual IP |
+| VLAN | HQ-CORE-01 Priority | Recorded State | Virtual IP |
 |---:|---:|---|---|
 | 10 | 110 | Active | 192.168.0.1 |
 | 20 | 110 | Active | 192.168.0.33 |
@@ -52,17 +52,17 @@ The current design retains two Core-to-FortiGate transit networks. The previousl
 
 | Link | Network | Core Address | FortiGate Address |
 |---|---|---|---|
-| CORE-1 ↔ FG-HQ | 192.168.0.128/30 | 192.168.0.129 | 192.168.0.130 |
-| CORE-2 ↔ FG-HQ | 192.168.0.136/30 | 192.168.0.137 | 192.168.0.138 |
+| HQ-CORE-01 ↔ FG-HQ | 192.168.0.128/30 | 192.168.0.129 | 192.168.0.130 |
+| HQ-CORE-02 ↔ FG-HQ | 192.168.0.136/30 | 192.168.0.137 | 192.168.0.138 |
 
 ### Firewall Transit VLANs
 
 | VLAN ID | Name | Core Switch |
 |---:|---|---|
-| 901 | FW-TRANSIT-A | CORE-1 |
-| 902 | FW-TRANSIT-B | CORE-2 |
+| 901 | FW-TRANSIT-A | HQ-CORE-01 |
+| 902 | FW-TRANSIT-B | HQ-CORE-02 |
 
-The supplied CORE-1 configuration contains SVI VLAN 901 at `192.168.0.129/30` and a default route via `192.168.0.130`. Verify the actual FortiGate interface configuration and physical connections against the current lab. Do not restore the removed transit networks from older plans.
+The supplied HQ-CORE-01 configuration contains SVI VLAN 901 at `192.168.0.129/30` and a default route via `192.168.0.130`. Verify the actual FortiGate interface configuration and physical connections against the current lab. Do not restore the removed transit networks from older plans.
 
 ## 4. Cairo HQ — FortiGate HA
 
@@ -129,7 +129,7 @@ A previously observed default-route selection used WAN2. Verify final route pref
 
 The DMZ is intended to host a web server reachable through controlled firewall policies and public VIP/NAT configuration.
 
-**Address conflict warning:** An earlier validation note also assigned `192.168.0.145` to CORE-1 and `192.168.0.146` to an `INSIDE-A` interface. Check the actual topology and current interface configurations before using these addresses.
+**Address conflict warning:** An earlier validation note also assigned `192.168.0.145` to HQ-CORE-01 and `192.168.0.146` to an `INSIDE-A` interface. Check the actual topology and current interface configurations before using these addresses.
 
 ## 7. Alexandria Branch — VLAN and IP Addressing
 
@@ -259,7 +259,7 @@ The following items are not part of the current design:
 
 ## 16. Verification Checklist
 
-- [ ] Confirm CORE-1 and CORE-2 transit interfaces and addresses.
+- [ ] Confirm HQ-CORE-01 and HQ-CORE-02 transit interfaces and addresses.
 - [ ] Resolve the DMZ `.145` and `.146` addressing conflict.
 - [ ] Confirm FortiGate HA status and monitored interfaces.
 - [ ] Verify WAN1 and WAN2 routing and failover.
