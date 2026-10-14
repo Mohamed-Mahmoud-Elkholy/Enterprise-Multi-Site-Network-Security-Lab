@@ -117,6 +117,9 @@ Enterprise-Multi-Site-Network-Security-Lab/
 ├── README.md
 ├── Images/
 │   ├── .gitkeep
+│   ├── FG-HQ-HA-Status-In-Sync.png
+│   ├── FG-HQ-HA-Status-Primary.png
+│   ├── FG-HQ-HA-Status-Secondary.png
 │   └── Topology-overview.png
 ├── Documentation/
 │   ├── ip-addressing-vlans.md
@@ -126,12 +129,12 @@ Enterprise-Multi-Site-Network-Security-Lab/
 │   └── README.md
 └── Verification/
     ├── dual-wan-verification.md
+    ├── fortigate-ha-verification.md
     ├── ipsec-vpn.md
     └── routing.md
 ```
 
 The `configs/` directory is reserved for sanitized device configurations collected from the running lab. No actual device configuration files have been added yet.
-
 ## Security and Lab Disclaimer
 
 This is a virtual lab developed for educational purposes, technical practice, and professional portfolio demonstration.
