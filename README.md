@@ -69,6 +69,7 @@ This confirms observed IPsec SA activity, but does not by itself establish end-t
 
 | Document | Description |
 |---|---|
+| [FortiGate HA Verification](Verification/fortigate-ha-verification.md) | HA roles, synchronization, heartbeat status, and failover validation |
 | [IP Addressing and VLANs](Documentation/ip-addressing-vlans.md) | VLAN IDs, subnets, and gateway addressing |
 | [Network Topology and Architecture](Documentation/network-topology.md) | Site architecture, device roles, routing design, and planned connectivity |
 | [Routing Verification](Verification/routing.md) | Collected routing and OSPF evidence |
