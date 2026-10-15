@@ -1,50 +1,75 @@
-# Dual-WAN Verification
+# Dual-WAN Failover and Recovery Verification
 
-## Overview
+## Objective
 
-The Cairo Headquarters lab is designed with two simulated ISP connections to provide redundant Internet connectivity through the FortiGate firewall.
+Verify automatic WAN failover from ISP-A (WAN1) to ISP-B (WAN2), followed by recovery to the preferred WAN1 route.
 
-## WAN Addressing
+## WAN Configuration
 
-| Parameter | WAN1 | WAN2 |
+| Parameter | WAN1 - ISP-A | WAN2 - ISP-B |
 |---|---|---|
 | FortiGate Interface | `port1` | `port2` |
-| ISP Gateway | `198.51.100.1` | `203.0.113.1` |
 | FortiGate IP | `198.51.100.2/29` | `203.0.113.2/29` |
-| Monitoring Target | `198.51.100.250` | `203.0.113.250` |
+| Gateway | `198.51.100.1` | `203.0.113.1` |
+| Monitor Target | `198.51.100.250` | `203.0.113.250` |
+| Default Route Distance | 10 | 20 |
 
-These addresses represent the planned lab addressing. The running configuration and actual connectivity must be verified against the devices before operational status is claimed.
+## Test Results
 
-## Verification Requirements
+### 1. Normal Operation
 
-The following tests are required to validate dual-WAN redundancy:
+- WAN1 and WAN2 Link Monitors were both reported as `alive`.
+- The preferred default route used WAN1.
 
-- Verify that each FortiGate WAN interface can reach its ISP gateway.
-- Verify that each monitoring target is reachable through its intended WAN interface.
-- Confirm the active default route under normal conditions.
-- Disable the primary WAN in a controlled test.
-- Confirm that the default route and Internet connectivity recover through the backup WAN.
-- Restore the primary WAN and verify route recovery.
-- Capture routing and connectivity evidence for each test state.
+```text
+S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
+```
 
-## Current Status
+### 2. WAN1 Failure and Failover
 
-**Status: Not yet validated.**
+The ISP-A connection toward INET was disconnected in the lab.
 
-The lab design includes two simulated ISP connections, but successful dual-WAN failover has not been established by the evidence documented here.
+- `WAN1-MONITOR`: `dead`
+- `WAN2-MONITOR`: `alive`
+- The default route switched to WAN2.
 
-A successful ping to an internal FortiGate transit address does not prove that either WAN connection or Internet failover is working.
+```text
+S* 0.0.0.0/0 [20/0] via 203.0.113.1, port2
+```
 
-## Evidence Requirements
+- Ping to the WAN2 monitor target `203.0.113.250` succeeded.
 
-Before marking dual-WAN failover as verified, collect:
+### 3. WAN1 Recovery
 
-- FortiGate WAN interface status and addressing.
-- Link-monitor status for both WAN connections.
-- The routing table before and after the controlled failover.
-- Connectivity test results before, during, and after failover.
-- Confirmation that the primary WAN resumes service after restoration.
+The ISP-A connection toward INET was restored.
 
-## Conclusion
+- `WAN1-MONITOR` returned to `alive`.
+- `WAN2-MONITOR` remained `alive`.
+- The preferred default route returned to WAN1.
 
-The Cairo Headquarters topology is designed for Internet-path redundancy using WAN1 and WAN2. Operational failover remains unverified until the required connectivity, monitoring, and routing tests are completed and documented.
+```text
+S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
+```
+
+- Ping to the WAN1 monitor target `198.51.100.250` succeeded after recovery.
+
+## Evidence
+
+- [WAN1 Monitor During Failover](../Images/Dual-WAN-Monitor-During-Failover.png)
+- [Default Route Switched to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png)
+- [WAN2 Monitor Target Ping Success](../Images/Dual-WAN-Ping-WAN2-Success.png)
+- [Default Route Recovered to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png)
+- [WAN1 Monitor Target Ping After Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png)
+
+## Observations and Limitations
+
+- Automatic default-route failover and recovery were observed in the lab.
+- Ping tests confirmed reachability to the configured monitor targets after failover and recovery.
+- These tests do not, by themselves, prove uninterrupted application sessions or end-to-end Internet availability during the transition.
+- After WAN1 recovery, the Link Monitor output showed `alive` but reported 63% packet loss in its displayed statistics. A follow-up stability check is required before declaring WAN1 fully stable.
+
+## Overall Result
+
+**PASS — Default-route failover to WAN2 and recovery to WAN1 were observed.**
+
+Application continuity and WAN1 stability after recovery remain outside the scope of this completed test.
