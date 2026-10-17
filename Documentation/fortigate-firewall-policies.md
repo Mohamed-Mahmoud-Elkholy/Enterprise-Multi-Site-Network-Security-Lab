@@ -114,6 +114,34 @@ The following items require review before the policy configuration can be consid
 
 For each test, record the date, source, destination, protocol/port, result, and relevant evidence filename.
 
+## DMZ HTTPS Verification Results
+
+### Internal Connectivity
+
+The following tests were performed from `FG-HQ-1`:
+
+| Test | Result |
+|---|---|
+| ICMP to `192.168.0.146` | Passed — 5 packets received, 0% packet loss |
+| TCP connection to `192.168.0.146:443` | Connection established, then closed by the remote host |
+| WAN1 VIP configuration | DNAT to `192.168.0.146:443` observed in the configuration and debug output |
+| WAN1 external TCP test | TCP connection opened from `INET-EDGE` |
+| WAN2 external TCP test | Timed out |
+| WAN2 debug flow | DNAT was identified, but the packet was dropped with `reverse path check fail` |
+| HTTPS application validation | Not completed |
+
+### WAN2 Known Issue
+
+An external TCP connection attempt from `INET-EDGE` (`203.0.113.250`) to the WAN2 VIP (`203.0.113.2:443`) reached `FG-HQ-1` through `port2`.
+
+The debug flow showed destination NAT to `192.168.0.146:443`, followed by a reverse-path check failure and packet drop.
+
+The root cause has not yet been confirmed. Further routing and reverse-path investigation is required before changing the configuration.
+
+### Verification Limitations
+
+Successful ICMP reachability and TCP connection establishment do not prove that the web application is functioning correctly. External HTTPS access through both VIPs remains incompletely verified.
+
 ## 8. Evidence Status and Scope
 
 This document records the policy names and selected settings visible in the available lab screenshots. It does not claim that every policy has been independently validated or that every listed traffic flow has passed testing.
