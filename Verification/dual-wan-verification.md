@@ -4,7 +4,7 @@
 
 Verify automatic WAN failover from ISP-A (WAN1) to ISP-B (WAN2), followed by recovery to the preferred WAN1 route.
 
-The lab uses WAN1 as the primary Internet path and WAN2 as the backup path. FortiGate link monitors track the reachability of their configured targets and support the primary/backup routing behavior.
+The lab uses WAN1 as the primary Internet path and WAN2 as the backup path. FortiGate link monitors track the reachability of their configured targets.
 
 ## 2. WAN Configuration
 
@@ -26,47 +26,52 @@ The routing-table evidence shows WAN1 selected as the preferred default route.
 S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
 ```
 
-The link-monitor evidence shows both monitors in the `alive` state:
+Both monitors were alive, and the recorded monitor output showed zero packet loss for both targets.
 
-- `WAN1-MONITOR`: `alive`
-- `WAN2-MONITOR`: `alive`
+**Result: PASS — WAN1 was preferred while both monitored paths were available.**
 
-The recorded monitor output reports `0.000%` packet loss for both targets in this state.
+**Evidence — WAN1 preferred route**
 
-**Result: PASS.** WAN1 is preferred while both monitored paths are available.
+![WAN1 preferred default route](../Images/Dual-WAN-Routing-Before-Failover.png)
 
-Evidence:
-- `Images/Dual-WAN-Routing-Before-Failover.png`
-- `Images/Dual-WAN-Monitor-Before-Failover.png`
+**Evidence — Both WAN monitors alive**
+
+![WAN monitors before failover](../Images/Dual-WAN-Monitor-Before-Failover.png)
 
 ### 3.2 WAN1 Failure and Failover to WAN2
 
 The ISP-A connection toward INET was disconnected during the lab test.
 
-The link-monitor output showed:
-
+The captured results showed:
 - `WAN1-MONITOR`: `dead`
 - `WAN2-MONITOR`: `alive`
 - WAN1 monitor packet loss: `54.000%` in the captured failure state.
 
-The routing table changed to the WAN2 default route:
+The routing table changed to WAN2:
 
 ```text
 S* 0.0.0.0/0 [20/0] via 203.0.113.1, port2
 ```
 
-The FortiGate ping test to the WAN2 monitor target `203.0.113.250` succeeded:
+The FortiGate ping test to `203.0.113.250` succeeded:
 
 ```text
 5 packets transmitted, 5 packets received, 0% packet loss
 ```
 
-**Result: PASS.** The recorded test demonstrates failover from WAN1 to WAN2, with WAN1 detected as unavailable and the WAN2 monitor target reachable.
+**Result: PASS — Failover from WAN1 to WAN2 was demonstrated.**
 
-Evidence:
-- `Images/Dual-WAN-Monitor-During-Failover.png`
-- `Images/Dual-WAN-Failover-to-WAN2.png`
-- `Images/Dual-WAN-Ping-WAN2-Success.png`
+**Evidence — Monitor state during failover**
+
+![WAN1 down and WAN2 alive](../Images/Dual-WAN-Monitor-During-Failover.png)
+
+**Evidence — Default route switched to WAN2**
+
+![Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png)
+
+**Evidence — WAN2 monitor target ping succeeded**
+
+![WAN2 ping success](../Images/Dual-WAN-Ping-WAN2-Success.png)
 
 ### 3.3 WAN1 Recovery
 
@@ -77,74 +82,70 @@ S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
 ```
 
 The recovered link-monitor output showed:
-
 - `WAN1-MONITOR`: `alive`
 - `WAN2-MONITOR`: `alive`
 - WAN1 monitor packet loss: `0.000%`
 - WAN2 monitor packet loss: `0.000%`
 
-The FortiGate ping test to the WAN1 monitor target `198.51.100.250` also succeeded:
+The ping test to `198.51.100.250` also succeeded:
 
 ```text
 5 packets transmitted, 5 packets received, 0% packet loss
 ```
 
-**Result: PASS.** The preferred default route returned to WAN1, both monitors were alive in the captured recovery state, and both monitor targets reported zero packet loss in that output.
+**Result: PASS — The preferred route returned to WAN1, and both monitor targets showed zero packet loss in the captured recovery state.**
 
-Evidence:
-- `Images/Dual-WAN-Recovery-to-WAN1.png`
-- `Images/Dual-WAN-Ping-WAN1-Recovery.png`
+**Evidence — Default route recovered to WAN1**
 
-## 4. HA Cluster Context
+![Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png)
 
-The accompanying HA status screenshot shows:
+**Evidence — WAN1 monitor target ping succeeded after recovery**
 
+![WAN1 ping after recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png)
+
+### 3.4 HA Cluster Context
+
+The captured HA status showed:
 - HA mode: `A-P`
 - Cluster health: `OK`
 - Primary member: `FG-HQ-1`
 - Secondary member: `FG-HQ-2`
 - Both members: `in-sync`
 
-This records the cluster state shown in the evidence. It is separate from the WAN failover test and does not, by itself, prove uninterrupted traffic during a FortiGate HA member failure.
+This evidence records the cluster state separately from the WAN failover test. It does not independently establish uninterrupted traffic during an HA member failure.
 
-Evidence:
-- `Images/Dual-WAN-HA-Before-Failover.png`
+![FortiGate HA status before failover](../Images/Dual-WAN-HA-Before-Failover.png)
 
-## 5. Observations
+## 4. Observations
 
 - WAN1 was the preferred default route during normal operation.
-- When the ISP-A path was disconnected, `WAN1-MONITOR` became `dead`.
+- Disconnecting ISP-A caused `WAN1-MONITOR` to become `dead`.
 - The default route switched to WAN2 through `203.0.113.1` on `port2`.
-- The WAN2 monitor target responded successfully to ping during the failover test.
+- The WAN2 monitor target responded successfully during failover.
 - After ISP-A was restored, `WAN1-MONITOR` returned to `alive`.
 - The preferred default route returned to WAN1 through `198.51.100.1` on `port1`.
-- The recovered monitor output reported `0.000%` packet loss for both WAN targets.
-- The `54.000%` WAN1 packet loss shown in the failure-state screenshot corresponds to the captured WAN1 outage condition; the recovered-state screenshot subsequently shows zero packet loss.
-- The evidence demonstrates default-route failover and recovery. It does not independently establish uninterrupted application sessions or zero packet loss throughout the transition.
+- The recovered monitor output reported zero packet loss for both targets.
+- The `54.000%` packet loss shown during the failure corresponds to the captured WAN1 outage state; the recovery evidence subsequently shows zero packet loss.
 
-## 6. Evidence Inventory
+The evidence demonstrates default-route failover and recovery. It does not independently establish uninterrupted application sessions throughout the transition.
 
-## 6. Evidence Inventory
-
-The following screenshots provide the evidence for each verification stage. Select a filename to open the corresponding image.
-
-## 6. Evidence Inventory
+## 5. Evidence Inventory
 
 | Evidence | What It Documents |
 |---|---|
 | [HA Cluster Before Failover](../Images/Dual-WAN-HA-Before-Failover.png) | FortiGate HA cluster status |
 | [WAN1 Preferred Route](../Images/Dual-WAN-Routing-Before-Failover.png) | WAN1 selected as the preferred default route |
 | [WAN Monitors Before Failover](../Images/Dual-WAN-Monitor-Before-Failover.png) | Both WAN monitors alive |
-| [WAN Monitors During Failover](../Images/Dual-WAN-Monitor-During-Failover.png) | WAN1 dead and WAN2 alive during failure |
+| [WAN Monitors During Failover](../Images/Dual-WAN-Monitor-During-Failover.png) | WAN1 dead and WAN2 alive |
 | [Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png) | Default route switched to WAN2 |
-| [WAN2 Ping Success](../Images/Dual-WAN-Ping-WAN2-Success.png) | Successful ping to the WAN2 monitor target |
+| [WAN2 Ping Success](../Images/Dual-WAN-Ping-WAN2-Success.png) | Successful ping to WAN2 monitor target |
 | [Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png) | Default route returned to WAN1 |
-| [WAN1 Ping After Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png) | Successful ping to the WAN1 monitor target after recovery |
+| [WAN1 Ping After Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png) | Successful ping after recovery |
 
-## 7. Overall Result
+## 6. Overall Result
 
 **PASS — Dual-WAN default-route failover and recovery were demonstrated in the recorded lab tests.**
 
-The captured evidence confirms that the default route switched from WAN1 to WAN2 during the WAN1 failure and returned to WAN1 after recovery. Both monitor targets were reachable in their respective recorded tests, and the recovered-state monitor output showed zero packet loss for both paths.
+The captured evidence shows the default route switching from WAN1 to WAN2 during the WAN1 failure and returning to WAN1 after recovery. Both monitor targets were reachable in their recorded tests, and the recovered-state monitor output showed zero packet loss for both paths.
 
 This result confirms the demonstrated primary/backup routing behavior. It does not claim that application sessions remained uninterrupted throughout the transition or that every possible Internet failure scenario has been tested.
