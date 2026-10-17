@@ -90,6 +90,8 @@ The collected outputs also showed OSPF neighbor relationships over the displayed
 
 **Result: PASS — The recorded routing evidence supports the intended primary/backup VPN path selection.**
 
+This result refers to the displayed routing and neighbor evidence; it should not be interpreted as proof that every remote application or network service was tested successfully.
+
 ## 7. Evidence Inventory
 
 | Evidence File | What It Documents |
@@ -106,6 +108,8 @@ The collected outputs also showed OSPF neighbor relationships over the displayed
 
 **PASS — VPN tunnel operation, routing through the primary and backup tunnel interfaces, failover to WAN2, and recovery to WAN1 were demonstrated by the recorded lab evidence.**
 
-The collected screenshots and routing outputs document the expected path-selection behavior. This VPN work is treated as completed project functionality.
+The collected screenshots and routing outputs document the expected path-selection behavior. The VPN failover and recovery functionality is treated as completed based on the recorded tests.
 
-The separate external HTTPS publishing issue affecting WAN2-to-DMZ access is documented in `fortigate-firewall-policies.md` and does not change this VPN verification result.
+The evidence does not independently establish uninterrupted application sessions during path transitions or successful connectivity for every service between Cairo HQ and Alexandria Branch.
+
+The separate external HTTPS publishing issue affecting WAN2-to-DMZ access is documented in `Documentation/fortigate-firewall-policies.md`. It is a separate issue and does not change the recorded VPN failover and recovery results.
