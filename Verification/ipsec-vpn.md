@@ -11,7 +11,7 @@ The design includes two route-based IPsec VPN tunnels:
 | `Cairo-Alex-WAN1` | Primary inter-site path | Preferred |
 | `Cairo-Alex-WAN2` | Backup inter-site path | Secondary |
 
-The lab uses both tunnels to provide redundant inter-site connectivity. Verification includes tunnel status, routing-table evidence, failover to the backup WAN path, and recovery to the preferred WAN path.
+The lab uses both tunnels to provide redundant inter-site connectivity. Verification covers tunnel status, routing-table evidence, failover to the backup WAN path, and recovery to the preferred WAN path.
 
 ## 2. VPN Tunnel Status Before Failover
 
@@ -19,9 +19,9 @@ The collected FortiGate evidence shows both configured IPsec tunnels established
 
 **Result: PASS — Both VPN tunnels were operational in the captured pre-failover state.**
 
-Evidence:
-- [VPN Tunnels Before Failover](../Images/VPN-Tunnels-Before-Failover.png)
-- [VPN Routing Before Failover](../Images/VPN-Routing-Before-Failover.png)
+![VPN tunnels before failover](../Images/VPN-Tunnels-Before-Failover.png)
+
+![VPN routing before failover](../Images/VPN-Routing-Before-Failover.png)
 
 ## 3. Primary Routing Through WAN1
 
@@ -33,12 +33,9 @@ The default route was:
 S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
 ```
 
-The evidence shows WAN1 selected as the preferred default route before failover.
-
 **Result: PASS — WAN1 was the preferred path in the recorded routing state.**
 
-Evidence:
-- [VPN Routing — WAN1 Primary](../Images/VPN-Routing-WAN1-Primary.png)
+![VPN routing with WAN1 as primary](../Images/VPN-Routing-WAN1-Primary.png)
 
 ## 4. Failover to WAN2
 
@@ -56,10 +53,11 @@ Remote routes were also observed through `Cairo-Alex-WAN2`, with tunnel next hop
 
 **Result: PASS — The recorded tests demonstrated failover from WAN1 to WAN2.**
 
-Evidence:
-- [VPN WAN1 Down, WAN2 Up](../Images/VPN-WAN1-Down-WAN2-Up.png)
-- [VPN Failover — WAN1 Down, WAN2 Up](../Images/VPN-Failover-WAN1-Down-WAN2-Up.png)
-- [VPN Failover to WAN2](../Images/VPN-Failover-to-WAN2.png)
+![VPN WAN1 down and WAN2 up](../Images/VPN-WAN1-Down-WAN2-Up.png)
+
+![VPN dashboard showing WAN1 down and WAN2 up](../Images/VPN-Failover-WAN1-Down-WAN2-Up.png)
+
+![VPN failover to WAN2](../Images/VPN-Failover-to-WAN2.png)
 
 ## 5. Recovery to WAN1
 
@@ -73,8 +71,7 @@ The recovery evidence documents the return to the preferred WAN1 path.
 
 **Result: PASS — Recovery to WAN1 was demonstrated in the recorded test.**
 
-Evidence:
-- [VPN Recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png)
+![VPN recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png)
 
 ## 6. Routing and OSPF Evidence
 
