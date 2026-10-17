@@ -53,8 +53,8 @@ The current design retains two Core-to-FortiGate transit networks. The previousl
 
 | Link | Network | Core Address | FortiGate Address |
 |---|---|---|---|
-| `HQ-CORE-01` ↔ `FG-HQ` | `192.168.0.128/30` | `192.168.0.129` | `192.168.0.130` |
-| `HQ-CORE-02` ↔ `FG-HQ` | `192.168.0.136/30` | `192.168.0.137` | `192.168.0.138` |
+| `HQ-CORE-01` ↔ `FG-HQ` | `192.168.0.128/30` | CORE-1: `192.168.0.129` | `192.168.0.130` |
+| `HQ-CORE-02` ↔ `FG-HQ` | `192.168.0.136/30` | CORE-2: `192.168.0.137` | `192.168.0.138` |
 
 ### Firewall Transit VLANs
 
@@ -77,7 +77,7 @@ The supplied `HQ-CORE-01` configuration contains SVI VLAN 901 at `192.168.0.129/
 - Core-facing interfaces: ports 5 and 6
 - DMZ interface: port 7
 
-The project handoff records Cairo FortiGate HA as configured. Current HA health and failover behavior still require live verification.
+The project handoff records Cairo FortiGate HA as configured. Historical status evidence showed both members in-sync, with HA health reported as OK during the recorded checks. Current HA health and controlled traffic failover still require verification.
 
 ### Firewall Loopbacks
 
@@ -92,12 +92,17 @@ The addressing plan places these addresses within `192.168.1.8/29`. Verify clust
 
 ### FortiGate WAN Interfaces
 
-| Interface | Network | FortiGate Address | ISP Gateway | Planned VIP |
+| Interface | Network | FortiGate Address | ISP Gateway | Recorded VIP External Address |
 |---|---|---|---|---|
-| WAN1 / port1 | `198.51.100.0/29` | `198.51.100.2/29` | `198.51.100.1` | `198.51.100.3` |
-| WAN2 / port2 | `203.0.113.0/29` | `203.0.113.2/29` | `203.0.113.1` | `203.0.113.3` |
+| WAN1 / port1 | `198.51.100.0/29` | `198.51.100.2/29` | `198.51.100.1` | `198.51.100.2` |
+| WAN2 / port2 | `203.0.113.0/29` | `203.0.113.2/29` | `203.0.113.1` | `203.0.113.2` |
 
-VIPs are design entries and must not be treated as operational until the virtual IP objects and related policies are verified.
+The recorded firewall VIP configuration uses the WAN interface addresses as external VIP addresses:
+
+- WAN1 VIP maps TCP port 443 on `198.51.100.2` to `192.168.0.146:443`.
+- WAN2 VIP maps TCP port 443 on `203.0.113.2` to `192.168.0.146:443`.
+
+These are recorded configuration details, not proof of successful external HTTPS access. The WAN2 troubleshooting evidence showed destination NAT followed by a reverse-path check failure and packet drop. External HTTPS access through both VIPs remains incompletely verified.
 
 ### ISP-A to INET
 
@@ -117,9 +122,16 @@ VIPs are design entries and must not be treated as operational until the virtual
 
 ### WAN Monitoring
 
-The handoff records a WAN1 link monitor targeting `198.51.100.250`, using gateway `198.51.100.1` and source address `198.51.100.2`. The latest recorded status was alive with 0% packet loss.
+The recorded link-monitor configuration uses:
 
-A previously observed default-route selection used WAN2. Verify final route preference and failover against the current routing table. A link monitor and an SD-WAN Performance SLA are different features.
+- WAN1 target: `198.51.100.250`
+- WAN1 gateway: `198.51.100.1`
+- WAN2 target: `203.0.113.250`
+- WAN2 gateway: `203.0.113.1`
+
+Historical evidence showed WAN1 and WAN2 monitoring configured, but the recorded WAN1 monitoring results included packet loss. The routing table also showed WAN1 preferred by route distance under the documented configuration.
+
+Verify current link-monitor status, routing-table selection, and connectivity during WAN failure and recovery. A link monitor and an SD-WAN Performance SLA are different features.
 
 ## 6. DMZ and Public Web Service
 
@@ -127,11 +139,15 @@ A previously observed default-route selection used WAN2. Verify final route pref
 |---|---|---|
 | DMZ subnet | `192.168.0.144/28` | Addressing plan |
 | FortiGate DMZ address | `192.168.0.145` | Recorded in plan |
-| WEB01 | `192.168.0.146` | Planned; verify before use |
+| WEB01 | `192.168.0.146` | Recorded as the mapped web-server address; service status requires verification |
 
 The DMZ is intended to host a web server reachable through controlled firewall policies and public VIP/NAT configuration.
 
-**Address conflict warning:** An earlier validation note also assigned `192.168.0.145` to `HQ-CORE-01` and `192.168.0.146` to an `INSIDE-A` interface. Check the actual topology and current interface configurations before using these addresses.
+### Address Conflict Warning
+
+An earlier validation note also assigned `192.168.0.145` to `HQ-CORE-01` and `192.168.0.146` to an `INSIDE-A` interface. These addresses conflict with the recorded DMZ plan.
+
+Check the actual topology and current interface configurations before making changes. Do not assign or move addresses until the connected interfaces and subnet usage have been reconciled.
 
 ## 7. Alexandria Branch — VLAN and IP Addressing
 
@@ -177,7 +193,7 @@ The intended design treats `ALEX-CORE` as an Area Border Router and `ALEX-ASBR` 
 
 Remote-access VPN address pool reserved in the design: `172.16.1.0/27`.
 
-Historical notes recorded active IPsec SAs, increasing encapsulation/decapsulation counters, and OSPF neighbors over tunnel interfaces on `FG-ALEX-01`. Those observations indicate past tunnel activity, but do not by themselves prove current end-to-end reachability or failover.
+Historical notes recorded active IPsec SAs, encapsulation/decapsulation counters, and OSPF neighbors over tunnel interfaces on `FG-ALEX-01`. Those observations indicate past tunnel activity, but do not by themselves prove current end-to-end reachability or failover.
 
 ## 10. Legacy RIP Domain
 
