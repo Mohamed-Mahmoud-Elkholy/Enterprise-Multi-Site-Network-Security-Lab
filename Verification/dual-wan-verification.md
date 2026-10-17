@@ -128,16 +128,18 @@ Evidence:
 
 The following screenshots provide the evidence for each verification stage. Select a filename to open the corresponding image.
 
+## 6. Evidence Inventory
+
 | Evidence | What It Documents |
 |---|---|
-| [Dual-WAN Routing Before Failover](../Images/Dual-WAN-Routing-Before-Failover.png) | WAN1 preferred default route |
-| [Dual-WAN Monitor Before Failover](../Images/Dual-WAN-Monitor-Before-Failover.png) | Both WAN monitors alive |
-| [Dual-WAN Monitor During Failover](../Images/Dual-WAN-Monitor-During-Failover.png) | WAN1 dead and WAN2 alive during failure |
-| [Dual-WAN Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png) | Default route switched to WAN2 |
-| [Dual-WAN Ping WAN2 Success](../Images/Dual-WAN-Ping-WAN2-Success.png) | Successful ping to the WAN2 monitor target |
-| [Dual-WAN Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png) | Default route returned to WAN1 |
-| [Dual-WAN Ping WAN1 Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png) | Successful ping to the WAN1 monitor target after recovery |
-| [Dual-WAN HA Before Failover](../Images/Dual-WAN-HA-Before-Failover.png) | FortiGate HA cluster status |
+| [HA Cluster Before Failover](../Images/Dual-WAN-HA-Before-Failover.png) | FortiGate HA cluster status |
+| [WAN1 Preferred Route](../Images/Dual-WAN-Routing-Before-Failover.png) | WAN1 selected as the preferred default route |
+| [WAN Monitors Before Failover](../Images/Dual-WAN-Monitor-Before-Failover.png) | Both WAN monitors alive |
+| [WAN Monitors During Failover](../Images/Dual-WAN-Monitor-During-Failover.png) | WAN1 dead and WAN2 alive during failure |
+| [Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png) | Default route switched to WAN2 |
+| [WAN2 Ping Success](../Images/Dual-WAN-Ping-WAN2-Success.png) | Successful ping to the WAN2 monitor target |
+| [Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png) | Default route returned to WAN1 |
+| [WAN1 Ping After Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png) | Successful ping to the WAN1 monitor target after recovery |
 
 ## 7. Overall Result
 
