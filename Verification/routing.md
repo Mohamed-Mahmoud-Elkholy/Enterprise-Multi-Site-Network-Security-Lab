@@ -63,6 +63,22 @@ The summary route `192.168.0.0/25` was also present with a `Null0` interface.
 - Verify the routing and operational status of the DMZ and WEB01.
 - Collect corresponding routing evidence from the other relevant devices.
 
+## 6. OSPF Route Redistribution Evidence
+
+The routing table on HQ-CORE-01 displayed the following external route:
+
+- **Destination:** `10.99.0.0/22`
+- **Route type:** OSPF External Type 2
+- **Next hop:** `192.168.0.130`
+- **Interface:** `Vlan901`
+
+This entry confirms that an OSPF external route was present in the routing table at the time of verification. The redistribution configuration and its source protocol should be documented separately using the relevant routing configuration from the device.
+
+## 7. Verification Scope
+
+The evidence in this document confirms the displayed OSPF neighbor states, the default route toward the FortiGate transit connection, and the listed remote routing entries.
+
+End-to-end connectivity, Internet availability, VPN failover, and DMZ service availability require their own test results before being marked as verified.
 ## 5. Current Verification Status
 
 The supplied command outputs confirm OSPF neighbor states and routing entries on `HQ-CORE-01` at the time of testing. They do not, by themselves, prove end-to-end reachability, Internet availability, VPN failover, or DMZ service availability.
