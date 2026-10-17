@@ -13,24 +13,19 @@ The architecture includes:
 - Multi-area OSPF routing.
 - Two site-to-site IPsec VPN tunnels with WAN path failover.
 - A DMZ hosting the web server.
-- Windows Active Directory and DNS services.
+- Windows Active Directory, DNS, and DHCP services.
 - A legacy RIP routing domain connected through ALEX-ASBR.
 - VMware VMnet8 for Internet connectivity.
-
-This document describes the recorded architecture and the functionality demonstrated by the project's collected configuration outputs, tests, and screenshots.
 
 ## 2. Cairo HQ
 
 ### 2.1 Core Switching
 
-The Cairo HQ core layer consists of:
-
-- `HQ-CORE-01`
-- `HQ-CORE-02`
+The Cairo HQ core layer consists of `HQ-CORE-01` and `HQ-CORE-02`.
 
 The design uses VLANs, 802.1Q trunking, EtherChannel, spanning tree, HSRP, Layer 3 SVIs, DHCP relay, and OSPF.
 
-The Cairo VLANs are documented in [`ip-addressing-vlans.md`](ip-addressing-vlans.md).
+See [IP Addressing and VLANs](ip-addressing-vlans.md).
 
 ### 2.2 Core-to-FortiGate Transit
 
@@ -39,18 +34,16 @@ The Cairo VLANs are documented in [`ip-addressing-vlans.md`](ip-addressing-vlans
 | 901 | FW-TRANSIT-A | `192.168.0.128/30` | CORE-1: `192.168.0.129` | `192.168.0.130` |
 | 902 | FW-TRANSIT-B | `192.168.0.136/30` | CORE-2: `192.168.0.137` | `192.168.0.138` |
 
-The supplied CORE-1 configuration confirms VLAN 901 at `192.168.0.129/30` and a default route through `192.168.0.130`.
-
-The recorded FortiGate routing table also shows connected transit networks on `port5` and `port6`.
+The recorded CORE-1 configuration confirms VLAN 901 and a default route through `192.168.0.130`.
 
 ### 2.3 FortiGate High Availability
 
-The Cairo firewall pair consists of:
+The Cairo firewall cluster consists of:
 
 - `FG-HQ-1` — Primary
 - `FG-HQ-2` — Secondary
 
-The cluster operates in Active-Passive mode.
+The cluster uses Active-Passive HA.
 
 | Function | Interface |
 |---|---|
@@ -59,79 +52,64 @@ The cluster operates in Active-Passive mode.
 | HA heartbeat | `port3`, `port4` |
 | Core connections | `port5`, `port6` |
 | DMZ | `port7` |
-| Dedicated management | `port8` |
+| Management | `port8` |
 
-The recorded monitored interfaces are `port1`, `port2`, `port5`, and `port6`.
+Captured HA output showed healthy cluster status, synchronized configurations, and the expected Primary/Secondary roles. Separate screenshots document a role change and recovery.
 
-Collected HA status output showed:
-
-- HA health status: `OK`
-- Configuration synchronization: `in-sync` on both members
-- `FG-HQ-1` operating as Primary
-- `FG-HQ-2` operating as Secondary
-- Heartbeat interfaces `port3` and `port4` up
-
-Additional screenshots document a role change to `FG-HQ-2` and subsequent recovery.
-
-**Result:** HA cluster status, synchronization, and role-change/recovery behavior are documented. These observations are distinct from a controlled test proving uninterrupted application traffic during HA failover.
-
-Evidence:
-
-- `Images/FG-HQ-HA-Status-In-Sync.png`
-- `Images/FG-HQ-HA-Status-Primary.png`
-- `Images/FG-HQ-HA-Status-Secondary.png`
-- `Images/FG-HQ-HA-Failover-to-HQ-2.png`
-- `Images/FG-HQ-HA-Recovery.png`
+These results document HA status and role-change behavior; they do not independently prove uninterrupted application traffic during a failover.
 
 ### 2.4 Dual ISP Connectivity
-
-The simulated WAN addressing is:
 
 | Component | Address |
 |---|---|
 | FortiGate WAN1 | `198.51.100.2/29` |
 | ISP-A gateway | `198.51.100.1` |
-| WAN1 VIP external address | `198.51.100.2` |
 | FortiGate WAN2 | `203.0.113.2/29` |
 | ISP-B gateway | `203.0.113.1` |
-| WAN2 VIP external address | `203.0.113.2` |
+| INET node on ISP-A network | `198.51.100.250` |
+| INET node on ISP-B network | `203.0.113.250` |
 
-The recorded VIP external addresses use the same IP addresses as their respective FortiGate WAN interfaces. This is retained as observed configuration and should be distinguished from any future addressing redesign.
+VMware VMnet8 provides the lab's external Internet/NAT connection.
 
-ISP-A connects to the INET node over `198.51.100.248/30`:
+The recorded tests demonstrated WAN1 as the preferred default route, failover to WAN2 when WAN1 became unavailable, and recovery to WAN1 after restoration.
 
-- ISP-A Fa0/0: `198.51.100.249`
-- INET Fa0/0: `198.51.100.250`
+**Result: PASS — Dual-WAN default-route failover and recovery were demonstrated.**
 
-ISP-B connects to the INET node over `203.0.113.248/30`:
+The monitoring record also captured packet loss during one WAN1 recovery observation. This is retained as a monitoring observation and does not negate the demonstrated route changes.
 
-- ISP-B Fa0/0: `203.0.113.249`
-- INET Fa1/0: `203.0.113.250`
+#### Dual-WAN Evidence
 
-VMware VMnet8 represents the lab's external Internet/NAT connection.
+**Before failover — HA status**
 
-The recorded Dual-WAN tests demonstrated:
+![Dual-WAN HA Before Failover](../Images/Dual-WAN-HA-Before-Failover.png)
 
-1. WAN1 selected as the preferred default route during normal operation.
-2. WAN1 monitor transitioning to `dead` during the simulated ISP-A failure.
-3. WAN2 monitor remaining `alive`.
-4. Default-route failover from WAN1 to WAN2.
-5. WAN1 monitor recovery and return of the preferred default route to WAN1.
+**Before failover — routing table**
 
-**Result: PASS — Dual-WAN default-route failover and recovery were demonstrated in the recorded lab tests.**
+![Dual-WAN Routing Before Failover](../Images/Dual-WAN-Routing-Before-Failover.png)
 
-The verification record also includes monitor output showing packet loss during one recovery observation. This does not negate the demonstrated route change, but should remain documented as a monitoring observation rather than being silently removed.
+**Before failover — both WAN monitors**
 
-Evidence:
+![Dual-WAN Monitor Before Failover](../Images/Dual-WAN-Monitor-Before-Failover.png)
 
-- `Images/Dual-WAN-HA-Before-Failover.png`
-- `Images/Dual-WAN-Routing-Before-Failover.png`
-- `Images/Dual-WAN-Monitor-Before-Failover.png`
-- `Images/Dual-WAN-Monitor-During-Failover.png`
-- `Images/Dual-WAN-Failover-to-WAN2.png`
-- `Images/Dual-WAN-Ping-WAN2-Success.png`
-- `Images/Dual-WAN-Recovery-to-WAN1.png`
-- `Images/Dual-WAN-Ping-WAN1-Recovery.png`
+**During failover — WAN1 down**
+
+![Dual-WAN Monitor During Failover](../Images/Dual-WAN-Monitor-During-Failover.png)
+
+**Failover — default route switched to WAN2**
+
+![Dual-WAN Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png)
+
+**WAN2 monitor target reachable**
+
+![Dual-WAN Ping WAN2 Success](../Images/Dual-WAN-Ping-WAN2-Success.png)
+
+**Recovery — preferred route returned to WAN1**
+
+![Dual-WAN Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png)
+
+**WAN1 monitor target reachable after recovery**
+
+![Dual-WAN Ping WAN1 Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png)
 
 ### 2.5 DMZ
 
@@ -142,25 +120,17 @@ The recorded DMZ subnet is `192.168.0.144/28`.
 | FortiGate DMZ interface | `192.168.0.145` |
 | WEB01 | `192.168.0.146` |
 
-The DMZ web server is reachable from the internal IT/server network using the configured internal firewall policy and the documented lab tests.
+Internal LAN-to-DMZ access to WEB01 is completed and documented.
 
-The internal DMZ access functionality is treated as completed project functionality.
+The external VIP configurations map TCP port 443 to `192.168.0.146:443` through WAN1 and WAN2. The remaining issue is external HTTPS publishing through WAN2: the recorded debug flow showed destination NAT followed by a reverse-path check failure and packet drop.
 
-The recorded VIP configurations map external TCP port 443 to `192.168.0.146:443` through both WAN interfaces.
-
-The remaining issue is specifically **external HTTPS publishing through WAN2**. The recorded WAN2 debug flow showed destination NAT to `192.168.0.146:443`, followed by a reverse-path check failure and packet drop.
-
-External HTTPS publishing through WAN1 and WAN2 must be distinguished from the already demonstrated internal LAN-to-DMZ functionality.
-
-**Result:** LAN-to-DMZ access is documented as completed. WAN2-to-DMZ HTTPS remains the outstanding external publishing issue.
+**Result:** LAN-to-DMZ access is completed. WAN2-to-DMZ HTTPS remains the outstanding publishing issue.
 
 ## 3. Alexandria Branch
 
 ### 3.1 ALEX-CORE
 
-The supplied configuration records the following addresses:
-
-| Interface | Address |
+| Interface | Recorded Address |
 |---|---|
 | Ethernet0/0 | `10.10.1.1/30` |
 | Ethernet0/1 | `10.10.1.5/30` |
@@ -172,9 +142,9 @@ The supplied configuration records the following addresses:
 
 The branch VLANs are USERS, SERVERS, SALES, and MANAGEMENT.
 
-The supplied interface output showed these four SVIs as down/down at the time of capture. This is historical evidence; it should not be interpreted as their current status without a newer check.
+The supplied interface output showed these SVIs down/down at the time of capture. That historical result should not be treated as their current state without a newer check.
 
-### 3.2 OSPF Configuration
+### 3.2 OSPF
 
 The supplied ALEX-CORE configuration records:
 
@@ -185,145 +155,133 @@ The supplied ALEX-CORE configuration records:
 - Area 2 summary: `10.10.0.0/24`
 - Default route via `10.10.1.2`
 
-The intended link addressing is:
-
-- FG-ALEX to ALEX-CORE: `10.10.1.0/30`
-- ALEX-CORE to ALEX-ASBR: `10.10.1.4/30`
-
-The supplied ALEX-CORE configuration assigns `10.10.1.1/30` to Ethernet0/0, while the design handoff identifies that address as FG-ALEX's address. This addressing discrepancy should be reconciled against the current running configuration before any change is made.
+The recorded configuration and design handoff contain an addressing discrepancy for the `10.10.1.0/30` link. The peer addressing should be reconciled against the current running configuration before making changes.
 
 ### 3.3 Legacy Routing
 
-The legacy routing domain uses the planned RIPv2/OSPF integration design with ALEX-ASBR as the redistribution point.
+The legacy routing design uses RIPv2 and OSPF, with ALEX-ASBR as the intended redistribution point.
 
-The recorded design includes:
+The planned address space includes `10.99.0.0/22`, point-to-point networks `10.99.0.0/30` and `10.99.0.4/30`, and legacy LANs `10.99.1.0/27` and `10.99.2.0/27`.
 
-- `10.99.0.0/22` as the planned address space.
-- `10.99.0.0/30` and `10.99.0.4/30` as point-to-point networks.
-- `10.99.1.0/27` and `10.99.2.0/27` as legacy LANs.
+HQ-CORE-01 displayed `10.99.0.0/22` as an OSPF External Type 2 route. The exact source protocol and redistribution statements are separate configuration details.
 
-The routing table on HQ-CORE-01 displayed `10.99.0.0/22` as an OSPF External Type 2 route. This confirms that the external route existed in the routing table, while the exact source protocol and redistribution statements are separate configuration details.
+## 4. Cairo–Alexandria IPsec VPN
 
-## 4. Cairo–Alexandria VPN
+The design includes two route-based IPsec tunnels.
 
-The design includes two route-based IPsec tunnels:
-
-| Tunnel | Network | Cairo Address | Alexandria Address | OSPF Cost |
+| Tunnel | Network | Cairo Address | Alexandria Address | Intended OSPF Cost |
 |---|---|---|---|---:|
 | Tunnel A — Primary | `172.16.0.0/30` | `172.16.0.1` | `172.16.0.2` | 10 |
 | Tunnel B — Backup | `172.16.0.4/30` | `172.16.0.5` | `172.16.0.6` | 100 |
 
-Tunnel A is intended to be the preferred path. Tunnel B provides the alternate path.
+The collected evidence documents active IPsec tunnel state, data counters, routing through the preferred WAN1 path, failover to WAN2, and recovery to WAN1.
 
-The collected evidence documents:
+**Result: PASS — VPN path failover to WAN2 and recovery to WAN1 were demonstrated by the recorded lab tests.**
 
-- Both IPsec tunnels established before failover.
-- Incoming and outgoing tunnel data counters.
-- WAN1 selected as the preferred route before failover.
-- WAN1 unavailable while WAN2 remained operational during the recorded test.
-- Routing and VPN state switching to the WAN2 path.
-- Recovery of the preferred route to WAN1.
+### VPN Evidence
 
-**Result: PASS — VPN path failover to WAN2 and recovery to WAN1 were demonstrated by the recorded lab evidence.**
+**Tunnel status before failover**
 
-Evidence:
+![VPN Tunnels Before Failover](../Images/VPN-Tunnels-Before-Failover.png)
 
-- `Images/VPN-Tunnels-Before-Failover.png`
-- `Images/VPN-Routing-Before-Failover.png`
-- `Images/VPN-Routing-WAN1-Primary.png`
-- `Images/VPN-WAN1-Down-WAN2-Up.png`
-- `Images/VPN-Failover-WAN1-Down-WAN2-Up.png`
-- `Images/VPN-Failover-to-WAN2.png`
-- `Images/VPN-Recovery-to-WAN1.png`
+**Routing before failover**
 
-The remote-access VPN pool `172.16.1.0/27` is reserved in the design; its current configuration is separate from the site-to-site VPN tests above.
+![VPN Routing Before Failover](../Images/VPN-Routing-Before-Failover.png)
+
+**WAN1 as the primary route**
+
+![VPN Routing WAN1 Primary](../Images/VPN-Routing-WAN1-Primary.png)
+
+**WAN1 down and WAN2 up**
+
+![VPN WAN1 Down WAN2 Up](../Images/VPN-WAN1-Down-WAN2-Up.png)
+
+**VPN failover state**
+
+![VPN Failover WAN1 Down WAN2 Up](../Images/VPN-Failover-WAN1-Down-WAN2-Up.png)
+
+**Failover to WAN2**
+
+![VPN Failover to WAN2](../Images/VPN-Failover-to-WAN2.png)
+
+**Recovery to WAN1**
+
+![VPN Recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png)
+
+The remote-access VPN pool `172.16.1.0/27` is reserved in the design and is separate from the site-to-site VPN verification described above.
 
 ## 5. Routing Architecture
 
-The routing design includes:
+The intended routing design includes:
 
-- Cairo internal VLAN networks using OSPF Area 1.
-- Cairo core-to-firewall transit using OSPF Area 0.
-- Alexandria local VLAN networks using OSPF Area 2.
-- Alexandria backbone connectivity using OSPF Area 0.
-- Cairo summary: `192.168.0.0/25`.
-- Alexandria summary: `10.10.0.0/24`.
+- Cairo internal VLAN networks in OSPF Area 1.
+- Cairo core-to-firewall transit in OSPF Area 0.
+- Alexandria local VLAN networks in OSPF Area 2.
+- Alexandria backbone connectivity in OSPF Area 0.
+- Cairo summary `192.168.0.0/25`.
+- Alexandria summary `10.10.0.0/24`.
 - ALEX-ASBR as the RIP/OSPF redistribution point.
-- Tunnel A with OSPF cost 10.
-- Tunnel B with OSPF cost 100.
+- Tunnel A as the preferred path and Tunnel B as the alternate path.
 
-Collected routing evidence showed OSPF adjacencies, a static default route toward the FortiGate transit connection, and an OSPF External Type 2 route for `10.99.0.0/22` on HQ-CORE-01.
+Collected routing outputs showed OSPF adjacencies, a static default route toward the FortiGate transit connection, and an OSPF External Type 2 route for `10.99.0.0/22` on HQ-CORE-01.
 
-The route tables also showed the remote networks through the WAN1-associated and WAN2-associated VPN interfaces in their respective recorded states.
+The recorded VPN tests also demonstrated route selection through the WAN1 and WAN2 paths in their respective test states.
 
-The exact redistribution source and statements are documented separately from the observed route-table entries.
+See [Routing Verification](../Verification/routing.md) and [IPsec VPN Verification](../Verification/ipsec-vpn.md).
 
 ## 6. Windows Server Services
-
-The recorded Windows Server addressing is:
 
 | Server | Address | Gateway | Notes |
 |---|---|---|---|
 | DC01 | `192.168.0.36/28` | `192.168.0.33` | Domain: `test.local` |
 | DC02 | `192.168.0.37/28` | `192.168.0.33` | DNS recorded as `192.168.0.36` |
 
-The project includes Active Directory Domain Services, DNS, and DHCP.
-
-The specific operational status of domain-controller replication, DNS resolution, DHCP scopes, and client connectivity should be described according to their respective lab test evidence.
+The project includes Active Directory Domain Services, DNS, and DHCP. Service-specific status is documented according to the relevant configuration and test evidence.
 
 ## 7. Management Network
 
-The updated management plan uses:
+The management network uses `192.168.22.0/24`.
 
-- Network: `192.168.22.0/24`
-- Recorded addresses: `192.168.22.100`, `192.168.22.110`, and `192.168.22.120`
+Recorded management addresses include:
 
-The device mapping, gateway, and VLAN/interface assignments for these addresses are maintained in the addressing documentation.
+- `192.168.22.100`
+- `192.168.22.110`
+- `192.168.22.120`
 
-## 8. Internet Connectivity
+Refer to the addressing documentation for the recorded device assignments.
 
-VMware VMnet8 represents the lab's external Internet/NAT connection.
-
-The Internet path depends on the simulated ISP links, FortiGate routing, link-monitor behavior, and the required firewall policies.
-
-The recorded tests demonstrated default-route failover from WAN1 to WAN2 and recovery to WAN1.
-
-The separate WAN2-to-DMZ HTTPS publishing issue is documented in the firewall policy verification record and should not be confused with Dual-WAN routing failover.
-
-## 9. Verification Summary
+## 8. Verification Summary
 
 | Feature | Recorded Result |
 |---|---|
-| FortiGate HA health and configuration synchronization | PASS — healthy and in-sync in captured output |
+| FortiGate HA health and synchronization | PASS — healthy and in-sync in captured output |
 | HA role change and recovery | Observed and documented |
 | Dual-WAN default-route failover | PASS |
-| Dual-WAN preferred-route recovery | PASS |
+| Dual-WAN recovery to WAN1 | PASS |
 | Site-to-site IPsec tunnel operation | PASS |
-| VPN path failover to WAN2 | PASS |
+| VPN failover to WAN2 | PASS |
 | VPN recovery to WAN1 | PASS |
 | LAN-to-DMZ access | Completed and documented |
-| External HTTPS through WAN2 to DMZ | Outstanding issue — reverse-path check failure observed |
-| OSPF adjacencies and recorded routes | Confirmed in captured routing outputs |
-| RIP/OSPF redistribution source configuration | Requires configuration-level confirmation |
-| Controlled HA failover with application traffic continuity | Not established by role-change evidence alone |
+| OSPF adjacencies and recorded routes | Confirmed in captured outputs |
+| External HTTPS from WAN2 to DMZ | Outstanding issue — reverse-path check failure observed |
+| Exact RIP/OSPF redistribution source | Requires configuration-level confirmation |
+| HA failover with uninterrupted application traffic | Not established by role-change evidence alone |
 
-## 10. Remaining Work
+## 9. Remaining Work
 
-The remaining work is limited to the following documented items:
+The remaining work is limited to:
 
-- Resolve and retest external HTTPS access through WAN2 to WEB01 in the DMZ.
-- Investigate the observed WAN1 monitor packet-loss result after recovery if it recurs.
-- Verify the current ALEX-CORE interface addressing against the intended FG-ALEX/ALEX-ASBR link design.
-- Confirm the exact source protocol and configuration statements for RIP/OSPF redistribution.
-- Investigate the origin and purpose of the recorded `172.16.0.x/32` routes.
-- If full HA service continuity is a project requirement, capture a controlled HA failover test that verifies actual application traffic.
+1. Resolve and retest external HTTPS access through WAN2 to WEB01.
+2. Investigate the WAN1 monitor packet-loss observation if it recurs.
+3. Reconcile the recorded ALEX-CORE link addressing against the current FG-ALEX and ALEX-ASBR configurations.
+4. Confirm the exact RIP/OSPF redistribution statements.
+5. Investigate the origin and purpose of the recorded `172.16.0.x/32` routes.
+6. If required by the project acceptance criteria, capture a controlled HA failover test that verifies actual application traffic.
 
-## 11. Conclusion
+## 10. Conclusion
 
 The lab documents a multi-site enterprise network with redundant Cairo core switching, FortiGate Active-Passive HA, dual ISP paths, multi-area OSPF, two site-to-site IPsec tunnels, a segmented DMZ, and Windows Server services.
 
-The recorded evidence demonstrates Dual-WAN route failover and recovery, VPN path failover and recovery, active VPN tunnel operation, OSPF routing activity, and internal LAN-to-DMZ access.
+The recorded evidence demonstrates Dual-WAN route failover and recovery, VPN path failover and recovery, IPsec tunnel activity, OSPF routing activity, and internal LAN-to-DMZ access.
 
 The outstanding external publishing issue is WAN2-to-DMZ HTTPS. It is not a general failure of the VPN, Dual-WAN routing, or internal DMZ access.
-
-**Documentation status:** The completed and demonstrated functions are recorded as such. Remaining items are limited to the specific issues and configuration details listed above.
