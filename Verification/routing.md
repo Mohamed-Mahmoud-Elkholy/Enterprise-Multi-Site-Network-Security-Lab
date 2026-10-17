@@ -2,42 +2,44 @@
 
 ## 1. Test Environment
 
-- **Device:** `HQ-CORE-01`
+- **Core device:** `HQ-CORE-01`
+- **Firewall:** `FG-HQ-1`
 - **Routing protocol:** OSPF
 - **Verification commands:**
   - `show ip ospf neighbor`
   - `show ip route`
+  - `get router info routing-table all`
 
-This document records routing evidence collected from the running lab. Results describe the device state at the time of capture and do not automatically establish end-to-end service availability.
+This document records routing evidence collected from the running lab. Results describe the device state at the time of capture. Routing-table evidence is distinguished from end-to-end application testing.
 
 ## 2. OSPF Neighbor Verification
 
-The command `show ip ospf neighbor` showed the following:
+The `show ip ospf neighbor` output from `HQ-CORE-01` showed:
 
 - Neighbor ID `3.3.3.3` on `Vlan901`, address `192.168.0.130`, state `FULL/DR`.
 - Neighbor ID `2.2.2.2` appeared on the local VLAN interfaces, with the displayed neighbor state `FULL/DR`.
 
-**Result:** The displayed OSPF adjacencies were in the `FULL` state when the command was executed.
+**Result: PASS.** The displayed OSPF adjacencies were in the `FULL` state during the recorded check.
 
-The collected output confirms the reported neighbor states at that time. It does not independently prove application connectivity across the routes advertised by those neighbors.
+These results confirm the reported neighbor states at that time. Application connectivity remains a separate test.
 
-## 3. Routing Table Verification
+## 3. HQ Core Routing Table
 
-The command `show ip route` showed the following routing entries.
+### 3.1 Default Route
 
-### Default Route
+The captured routing table showed:
 
 ```text
 S* 0.0.0.0/0 via 192.168.0.130
 ```
 
-The default route points to `192.168.0.130` through the FortiGate transit connection.
+The default route points toward `192.168.0.130` through the FortiGate transit connection.
 
-**Result:** A static default route was present in the routing table at the time of capture.
+**Result: PASS.** A static default route toward the FortiGate was present in the routing table.
 
-The presence of this route does not independently prove Internet connectivity or successful dual-WAN failover.
+Internet failover is documented separately in `dual-wan-failover.md`.
 
-### Remote Routes
+### 3.2 Remote Routes
 
 | Destination | Route Type | Next Hop | Interface |
 |---|---|---|---|
@@ -48,83 +50,126 @@ The presence of this route does not independently prove Internet connectivity or
 | `192.168.0.136/30` | OSPF | `192.168.0.130` | `Vlan901` |
 | `192.168.0.144/28` | OSPF | `192.168.0.130` | `Vlan901` |
 
-These entries document the remote routes displayed by `HQ-CORE-01`. Their presence confirms that the routes were available in the local routing table at the time of capture; it does not by itself confirm that the destinations were reachable.
+These entries document the remote routes displayed by `HQ-CORE-01` at the time of capture.
 
-### Local Networks
+**Result: PASS.** The listed remote routes were present in the routing table.
 
-The routing table showed the Cairo VLAN networks as directly connected:
+### 3.3 Local Networks
 
-- **VLAN 10:** `192.168.0.0/27`
-- **VLAN 20:** `192.168.0.32/28`
-- **VLAN 30:** `192.168.0.48/28`
-- **VLAN 40:** `192.168.0.64/28`
-- **VLAN 50:** `192.168.0.80/28`
-- **VLAN 60:** `192.168.0.96/29`
-- **VLAN 70:** `192.168.0.104/29`
-- **VLAN 99:** `192.168.0.112/28`
+The routing table showed the following Cairo VLAN networks as directly connected:
+
+| VLAN | Network |
+|---|---|
+| VLAN 10 | `192.168.0.0/27` |
+| VLAN 20 | `192.168.0.32/28` |
+| VLAN 30 | `192.168.0.48/28` |
+| VLAN 40 | `192.168.0.64/28` |
+| VLAN 50 | `192.168.0.80/28` |
+| VLAN 60 | `192.168.0.96/29` |
+| VLAN 70 | `192.168.0.104/29` |
+| VLAN 99 | `192.168.0.112/28` |
 
 The summary route `192.168.0.0/25` was also present with a `Null0` interface.
 
-The connected routes document the local networks represented in the captured routing table. The `Null0` summary route is recorded as observed; its intended design purpose should be confirmed from the relevant routing configuration before drawing further conclusions.
+The connected routes document the local networks represented in the captured routing table. The purpose of the `Null0` summary route should be interpreted alongside the relevant routing configuration.
 
 ## 4. OSPF Route Redistribution Evidence
 
-The routing table on `HQ-CORE-01` displayed the following external route:
+The routing table on `HQ-CORE-01` displayed:
 
-- **Destination:** `10.99.0.0/22`
-- **Route type:** OSPF External Type 2
-- **Next hop:** `192.168.0.130`
-- **Interface:** `Vlan901`
+| Field | Value |
+|---|---|
+| Destination | `10.99.0.0/22` |
+| Route Type | OSPF External Type 2 |
+| Next Hop | `192.168.0.130` |
+| Interface | `Vlan901` |
 
-**Result:** An OSPF External Type 2 route for `10.99.0.0/22` was present in the routing table at the time of verification.
+**Result: PASS.** An OSPF External Type 2 route for `10.99.0.0/22` was present in the routing table.
 
-The routing table entry alone does not identify the source protocol or prove the complete redistribution configuration. The relevant routing configuration must be examined separately to establish the source protocol and redistribution statements.
+The route entry alone does not identify the original source protocol or prove the complete redistribution configuration. Those details must be established from the relevant routing configuration.
 
-## 5. Additional Routes Requiring Investigation
+## 5. FortiGate VPN Routing Evidence
 
-The available notes identify the following addresses as appearing as `/32` host routes:
+The captured `FG-HQ-1` routing tables provide evidence of route selection through the two Cairo–Alexandria VPN tunnels.
+
+### 5.1 WAN1-Associated Tunnel Selected
+
+One captured routing table showed the following routes through `Cairo-Alex-WAN1`:
+
+| Destination | Route Type | Tunnel Next Hop |
+|---|---|---|
+| `10.10.0.0/24` | OSPF Inter-Area | `198.51.100.10` |
+| `10.10.1.0/30` | OSPF | `198.51.100.10` |
+| `10.10.1.4/30` | OSPF Inter-Area | `198.51.100.10` |
+| `10.99.0.0/22` | OSPF External Type 2 | `198.51.100.10` |
+
+The same routing output showed the default route through WAN1:
+
+```text
+S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
+```
+
+### 5.2 WAN2-Associated Tunnel Selected
+
+Another captured routing table showed the remote routes through `Cairo-Alex-WAN2`:
+
+| Destination | Route Type | Tunnel Next Hop |
+|---|---|---|
+| `10.10.0.0/24` | OSPF Inter-Area | `203.0.113.10` |
+| `10.10.1.0/30` | OSPF | `203.0.113.10` |
+| `10.10.1.4/30` | OSPF Inter-Area | `203.0.113.10` |
+| `10.99.0.0/22` | OSPF External Type 2 | `203.0.113.10` |
+
+The corresponding routing output showed the default route through WAN2:
+
+```text
+S* 0.0.0.0/0 [20/0] via 203.0.113.1, port2
+```
+
+### 5.3 Routing Observation
+
+The captured routing tables show the remote networks associated with both `Cairo-Alex-WAN1` and `Cairo-Alex-WAN2`. They also show the default route changing between WAN1 and WAN2 in the recorded Dual-WAN tests.
+
+**Result: PASS.** The routing evidence demonstrates route selection through the recorded WAN paths and VPN tunnel interfaces.
+
+These route snapshots are evidence of routing state at their respective capture times. They do not, by themselves, establish uninterrupted application sessions during a transition.
+
+## 6. Additional Host Routes
+
+The available routing evidence includes the following `/32` routes:
 
 - `172.16.0.1/32`
 - `172.16.0.2/32`
 - `172.16.0.5/32`
 - `172.16.0.6/32`
 
-The reason these addresses appear as host routes has not been established by the available evidence. Their origin and intended purpose should be checked against the full routing table and the relevant device configuration before making changes.
+The captured FortiGate output shows these addresses associated with the Cairo–Alexandria tunnel interfaces, including connected tunnel addresses and routes learned through the alternate tunnel.
 
-## 6. Verification Scope
+Their presence is recorded as observed. Any change to these routes should be based on the full routing configuration and the intended tunnel design.
 
-The available command outputs confirm the displayed OSPF neighbor states, the default route toward the FortiGate transit connection, and the listed routing entries on `HQ-CORE-01`.
+## 7. Verification Scope
 
-The current evidence supports these conclusions:
+The collected evidence confirms the following:
 
-- The displayed OSPF adjacencies were in the `FULL` state during the recorded check.
-- A static default route toward `192.168.0.130` was present.
-- The listed remote and connected routes appeared in the routing table.
+- OSPF adjacencies on `HQ-CORE-01` were in the `FULL` state during the recorded check.
+- A static default route toward the FortiGate transit connection was present on the core.
+- The listed remote and connected routes appeared in the core routing table.
 - An OSPF External Type 2 route for `10.99.0.0/22` was present.
+- FortiGate routing tables showed the recorded remote networks through both Cairo–Alexandria tunnel interfaces.
+- The FortiGate default route was observed through WAN1 and through WAN2 in separate test states.
 
-These observations do not, by themselves, prove:
+The following are separate from these routing-table results:
 
-- End-to-end application connectivity between Cairo HQ and Alexandria.
-- Internet availability through both WAN links.
-- Successful automatic dual-WAN or IPsec VPN failover and recovery.
-- External HTTPS availability through the DMZ VIPs.
-- The exact source protocol or complete configuration used for route redistribution.
+- Application-level connectivity between all HQ and Alexandria networks.
+- Uninterrupted application sessions during route transitions.
+- External HTTPS access to the DMZ through both WAN VIPs.
 
-## 7. Items Requiring Further Verification
-
-The following items remain open:
-
-- Verify end-to-end connectivity between Cairo HQ and the Alexandria branch using appropriate reachability and application tests.
-- Verify Internet access and dual-WAN failover separately using the existing Dual-WAN verification record.
-- Investigate the origin and purpose of the displayed `172.16.0.1/32`, `172.16.0.2/32`, `172.16.0.5/32`, and `172.16.0.6/32` routes.
-- Verify the routing and operational status of the DMZ and `WEB01`.
-- Collect and compare routing evidence from other relevant devices when required.
-- Review the routing configuration to identify the source protocol and exact statements used for OSPF route redistribution.
+Dual-WAN failover and recovery results are documented in `dual-wan-failover.md`. VPN implementation and its verification are documented in `ipsec-vpn.md`.
 
 ## 8. Conclusion
 
-The captured routing evidence shows OSPF adjacencies in the `FULL` state, a static default route toward the FortiGate transit connection, and multiple remote and connected routes on `HQ-CORE-01`.
+**PASS — The captured routing evidence confirms OSPF neighbor formation, the core default route, the documented remote routes, and route selection through both recorded Cairo–Alexandria VPN tunnel paths.**
 
-An OSPF External Type 2 route for `10.99.0.0/22` was also present. The source protocol and exact redistribution configuration remain unconfirmed from the routing table alone.
+The routing tables show the expected WAN1 and WAN2 default-route states in their respective captures. These results support the documented routing design and are consistent with the recorded Dual-WAN failover and recovery behavior.
 
-End-to-end connectivity, complete routing redundancy, and the unexplained `/32` host routes require separate verification. No routing change should be considered a confirmed fix until the relevant behavior has been tested successfully.
+Routing-table evidence is not presented as proof of every application flow. The separate DMZ WAN2 HTTPS publishing issue remains documented in the firewall policy verification record and does not change the results recorded here.
