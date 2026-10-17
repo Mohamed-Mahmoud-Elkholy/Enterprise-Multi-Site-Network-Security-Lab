@@ -20,7 +20,7 @@ The lab uses WAN1 as the primary Internet path and WAN2 as the backup path. Fort
 
 ### 3.1 Normal Operation
 
-The routing-table evidence shows WAN1 selected as the preferred default route.
+The captured routing-table evidence showed WAN1 selected as the preferred default route.
 
 ```text
 S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
@@ -43,6 +43,7 @@ Both monitors were alive, and the recorded monitor output showed zero packet los
 The ISP-A connection toward INET was disconnected during the lab test.
 
 The captured results showed:
+
 - `WAN1-MONITOR`: `dead`
 - `WAN2-MONITOR`: `alive`
 - WAN1 monitor packet loss: `54.000%` in the captured failure state.
@@ -82,6 +83,7 @@ S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
 ```
 
 The recovered link-monitor output showed:
+
 - `WAN1-MONITOR`: `alive`
 - `WAN2-MONITOR`: `alive`
 - WAN1 monitor packet loss: `0.000%`
@@ -106,6 +108,7 @@ The ping test to `198.51.100.250` also succeeded:
 ### 3.4 HA Cluster Context
 
 The captured HA status showed:
+
 - HA mode: `A-P`
 - Cluster health: `OK`
 - Primary member: `FG-HQ-1`
@@ -127,7 +130,7 @@ This evidence records the cluster state separately from the WAN failover test. I
 - The recovered monitor output reported zero packet loss for both targets.
 - The `54.000%` packet loss shown during the failure corresponds to the captured WAN1 outage state; the recovery evidence subsequently shows zero packet loss.
 
-The evidence demonstrates default-route failover and recovery. It does not independently establish uninterrupted application sessions throughout the transition.
+The evidence demonstrates default-route failover and recovery. It does not independently establish uninterrupted application sessions throughout the transition or successful access to every external application through both WANs.
 
 ## 5. Evidence Inventory
 
