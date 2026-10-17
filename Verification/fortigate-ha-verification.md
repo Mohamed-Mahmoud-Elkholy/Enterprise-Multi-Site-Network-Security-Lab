@@ -8,7 +8,7 @@ The Cairo Headquarters lab uses two FortiGate VM64-KVM appliances configured in 
 
 | Parameter | FG-HQ-1 | FG-HQ-2 |
 |---|---|---|
-| HA Role | Primary | Secondary |
+| Normal HA Role | Primary | Secondary |
 | Cluster Index | 0 | 1 |
 | Configuration Status | In-sync | In-sync |
 | Heartbeat Interfaces | port3, port4 | port3, port4 |
@@ -21,11 +21,19 @@ The following results were observed during verification:
 
 - HA health status reported `OK`.
 - Both cluster members were visible in the HA status output.
-- `FG-HQ-1` was Primary and `FG-HQ-2` was Secondary.
+- `FG-HQ-1` was observed as Primary and `FG-HQ-2` as Secondary during the normal cluster state.
 - Both members reported `in-sync`.
-- Heartbeat interfaces `port3` and `port4` were up on both appliances.
-- Both heartbeat interfaces reported zero RX drops, RX errors, and TX errors in the collected interface statistics.
+- Heartbeat interfaces `port3` and `port4` were up on both appliances in the collected status output.
+- The collected heartbeat interface statistics reported zero RX drops, RX errors, and TX errors at the time of that check.
 - Monitored interfaces `port1`, `port2`, `port5`, and `port6` were up in the collected HA status output.
+
+### Normal Cluster State Evidence
+
+![HA Cluster In-Sync](../Images/FG-HQ-HA-Status-In-Sync.png)
+
+![FG-HQ-1 Primary](../Images/FG-HQ-HA-Status-Primary.png)
+
+![FG-HQ-2 Secondary](../Images/FG-HQ-HA-Status-Secondary.png)
 
 ## Historical HA Events
 
@@ -33,26 +41,47 @@ The HA history contains previous events in which `FG-HQ-2` lost heartbeat connec
 
 The available evidence does not establish the root cause of these historical events.
 
-Although the heartbeat links and their interface counters looked healthy during the latest checks, this does not prove that the historical interruptions have been permanently resolved.
+Although the heartbeat links and their interface counters looked healthy during the recorded checks, this does not prove that the historical interruptions have been permanently resolved.
+
+## Observed Role Change and Recovery
+
+Additional screenshots show a change in HA roles, with `FG-HQ-2` appearing as Primary and `FG-HQ-1` as Secondary. A separate screenshot records HA recovery status.
+
+![Observed HA Role Change](../Images/FG-HQ-HA-Failover-to-HQ-2.png)
+
+![HA Recovery](../Images/FG-HQ-HA-Recovery.png)
+
+These screenshots provide evidence of an observed role change and recovery state. They do not, by themselves, establish that a controlled failure of `FG-HQ-1` was performed or that production traffic continued without interruption during the transition.
 
 ## Failover Validation
 
-**Status: Not yet formally validated.**
+**Status: Partially documented; end-to-end failover validation remains unconfirmed.**
 
-The current evidence confirms the cluster's observed health, member roles, configuration synchronization, and heartbeat interface status.
+The available evidence supports the following conclusions:
 
-It does not establish that production traffic successfully transfers to `FG-HQ-2` during a controlled failure of `FG-HQ-1`.
+- The cluster was observed in a healthy, synchronized state.
+- Both members and their HA roles were visible in the collected status output.
+- A change in the displayed Primary/Secondary roles was observed.
+- A recovery state was captured.
 
-A controlled failover test must be completed before operational HA failover can be marked as verified.
+The available screenshots do not conclusively demonstrate successful traffic continuity during a controlled failover.
 
-## Evidence
+To mark operational HA failover as verified, a controlled test must document the initiating failure, the role transition, and successful traffic through `FG-HQ-2` during and after the transition.
 
+## Evidence Files
+
+The following screenshots are referenced in this document:
+
+- `Images/FG-HQ-HA-Status-In-Sync.png`
 - `Images/FG-HQ-HA-Status-Primary.png`
 - `Images/FG-HQ-HA-Status-Secondary.png`
-- `Images/FG-HQ-HA-Status-In-Sync.png`
+- `Images/FG-HQ-HA-Failover-to-HQ-2.png`
+- `Images/FG-HQ-HA-Recovery.png`
 
-Ensure that the filenames above match the actual files committed to the repository.
+Ensure these filenames match the actual files committed to the repository.
 
 ## Conclusion
 
-The FortiGate Active-Passive cluster was observed in a healthy, synchronized state. Both heartbeat interfaces were up on both appliances during verification. Historical heartbeat interruptions remain unexplained, and successful controlled failover is still unverified.
+The FortiGate Active-Passive cluster was observed in a healthy, synchronized state, with both heartbeat interfaces up during the recorded checks. Additional screenshots show an HA role change and recovery state.
+
+Historical heartbeat interruptions remain unexplained. Successful traffic continuity during a controlled HA failover has not yet been conclusively verified, so operational failover should not be marked as fully validated.
