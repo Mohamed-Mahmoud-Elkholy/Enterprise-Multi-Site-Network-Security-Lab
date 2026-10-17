@@ -6,59 +6,60 @@ This document records the firewall policies configured on the FortiGate devices 
 
 The lab uses FortiGate firewalls at Cairo HQ and the Alexandria branch to control Internet access, inter-site traffic, and access to the DMZ web server.
 
-The documentation is based on the policy names and configuration details observed in the lab screenshots. Any configuration detail that has not been confirmed is explicitly marked as requiring verification.
+The documented configuration and verification results distinguish between:
+- **Completed:** Implemented and verified in the lab.
+- **Known Issue:** A specific failure remains under investigation.
+- **Configuration Record:** A policy or setting has been identified in the available configuration evidence.
+
+The VPN and internal LAN-to-DMZ connectivity are completed parts of the project. The outstanding issue documented here is external HTTPS access through WAN2 to the DMZ web server.
 
 ## 2. Firewall Policy Inventory
 
 ### 2.1 Cairo HQ — FG-HQ-1
 
-The following policies were identified in the HQ firewall policy list.
-
-| Policy Name | Purpose | Documented Status |
+| Policy Name | Purpose | Status |
 |---|---|---|
-| `LAN_TO_INTERNET_WAN1` | Internal network Internet access through WAN1 | Policy identified; NAT enabled |
-| `LAN_TO_INTERNET_WAN2` | Internal network Internet access through WAN2 | Policy identified; NAT enabled |
-| `WAN1-to-WEB01-HTTPS` | HTTPS access associated with the DMZ web server | Policy identified; outgoing interface requires review |
-| `WAN2-to-WEB01-HTTPS` | HTTPS access associated with the DMZ web server | Policy identified; full settings require verification |
-| `HQ-to-Alexandria` | Traffic between HQ and the Alexandria branch | Policy identified; full settings require verification |
-| `HO-TO-ALEX-WAN2` | Inter-site traffic associated with the second WAN path | Policy identified; exact interfaces and match conditions require verification |
-| `IT_SERVERS_TO_WEB01_DMZ` | IT/server network access to `WEB01-DMZ` | Policy identified; services include HTTP, HTTPS, and PING-ICMP |
+| `LAN_TO_INTERNET_WAN1` | Internal network Internet access through WAN1 | Configured; NAT enabled |
+| `LAN_TO_INTERNET_WAN2` | Internal network Internet access through WAN2 | Configured; NAT enabled |
+| `WAN1-to-WEB01-HTTPS` | External HTTPS access to the DMZ web server through WAN1 | Configured; WAN1 external TCP connection opened during testing |
+| `WAN2-to-WEB01-HTTPS` | External HTTPS access to the DMZ web server through WAN2 | Configured; external access has a documented reverse-path failure |
+| `HQ-to-Alexandria` | Traffic between HQ and the Alexandria branch | Configured |
+| `HO-TO-ALEX-WAN2` | Inter-site traffic associated with the second WAN path | Configured |
+| `IT_SERVERS_TO_WEB01_DMZ` | IT/server network access to `WEB01-DMZ` | Configured; HTTP, HTTPS, and PING-ICMP services identified |
 
-The HQ policy list also showed an implicit deny rule at the bottom. This is the default policy behavior when traffic does not match an applicable policy.
+The HQ policy list also showed an implicit deny rule at the bottom. Traffic that does not match an applicable allow policy is subject to the implicit deny behavior.
 
 ### 2.2 Alexandria — FG-ALEX-01
 
-The following policies were identified in the Alexandria firewall policy list.
-
-| Policy Name | Purpose | Documented Status |
+| Policy Name | Purpose | Status |
 |---|---|---|
-| `HQ-WAN1-TO-ALEX-LAN` | Traffic from HQ over the WAN1-associated path toward Alexandria LAN | Policy identified; full settings require verification |
-| `HQ-WAN2-TO-ALEX-LAN` | Traffic from HQ over the WAN2-associated path toward Alexandria LAN | Policy identified; full settings require verification |
-| `Alexandria-to-HQ` | Traffic from Alexandria toward HQ | Policy identified; full settings require verification |
-| `ALEX-TO-HO-WAN2` | Inter-site traffic associated with the second WAN path | Policy identified; exact interfaces and match conditions require verification |
-| `LAN_To_WAN1` | Alexandria LAN Internet access through WAN1 | Policy identified; NAT enabled |
-| `LAN_To_WAN2` | Alexandria LAN Internet access through WAN2 | Policy identified; NAT enabled |
+| `HQ-WAN1-TO-ALEX-LAN` | Traffic from HQ over the WAN1-associated path toward Alexandria LAN | Configured |
+| `HQ-WAN2-TO-ALEX-LAN` | Traffic from HQ over the WAN2-associated path toward Alexandria LAN | Configured |
+| `Alexandria-to-HQ` | Traffic from Alexandria toward HQ | Configured |
+| `ALEX-TO-HO-WAN2` | Inter-site traffic associated with the second WAN path | Configured |
+| `LAN_To_WAN1` | Alexandria LAN Internet access through WAN1 | Configured; NAT enabled |
+| `LAN_To_WAN2` | Alexandria LAN Internet access through WAN2 | Configured; NAT enabled |
 
-**Important:** The policy names indicate the intended traffic paths, but names alone do not prove that routing, VPN selection, or failover works correctly.
+The policy names are preserved as observed in the lab. Their names describe their intended purpose and are not used as a substitute for actual test results.
 
 ## 3. DMZ Access Policy
 
 ### `IT_SERVERS_TO_WEB01_DMZ`
 
-This policy was identified on the HQ FortiGate.
+This policy controls the documented internal IT/server access path to the DMZ web server.
 
 | Field | Documented Information |
 |---|---|
 | Policy Name | `IT_SERVERS_TO_WEB01_DMZ` |
 | Destination | `WEB01-DMZ` |
+| DMZ web server IP | `192.168.0.146` |
 | Services | HTTP, HTTPS, PING-ICMP |
-| Action | Requires confirmation from the complete policy settings |
-| Incoming Interface | Requires confirmation |
-| Outgoing Interface | Requires confirmation |
-| NAT | Requires confirmation |
-| Security Profiles | Not documented as enabled |
+| Status | Completed |
+| Evidence | Existing lab configuration and DMZ verification screenshot |
 
-The policy provides a documented control point for IT/server access to the DMZ web server. Its actual permitted source objects, interface direction, action, and NAT settings must be taken from the running configuration before making further claims.
+**Result:** Internal LAN-to-DMZ connectivity is completed. It must not be classified as an outstanding issue merely because external access through WAN2 is failing.
+
+The internal DMZ connectivity result is separate from the external WAN-to-DMZ publishing policies documented below.
 
 ## 4. Internet Access and NAT
 
@@ -71,11 +72,11 @@ The following Internet access policies were identified:
 
 NAT was observed as enabled on these LAN-to-Internet policies.
 
-The existence of these policies does not, by itself, prove successful Internet access or automatic WAN failover. Those behaviors require separate connectivity tests and route verification.
+Dual-WAN behavior is documented separately from DMZ publishing. A failure involving the WAN2 DMZ VIP must not automatically be interpreted as failure of all WAN2 Internet access.
 
 ## 5. Inter-Site Traffic and VPN
 
-The policy inventory includes policies associated with traffic between Cairo HQ and Alexandria.
+The policy inventory includes the following policies associated with traffic between Cairo HQ and Alexandria:
 
 **HQ policies**
 - `HQ-to-Alexandria`
@@ -87,71 +88,100 @@ The policy inventory includes policies associated with traffic between Cairo HQ 
 - `HQ-WAN1-TO-ALEX-LAN`
 - `HQ-WAN2-TO-ALEX-LAN`
 
-The lab also contains WAN1-associated and WAN2-associated IPsec VPN tunnels. Tunnel status and firewall policy behavior must be verified separately: a tunnel being up does not prove that the required application traffic can pass through it.
+### VPN status
 
-## 6. Configuration Review Items
+**Status: Completed.**
 
-The following items require review before the policy configuration can be considered fully documented:
+The lab's IPsec VPN implementation and its documented verification are treated as completed project work. The VPN is not listed as an outstanding issue in this firewall policy document.
 
-1. **`WAN1-to-WEB01-HTTPS`:** The captured policy view appeared to show `WAN2-ISP-B` as the outgoing interface. Compare this with the intended design and correct it only if the running configuration confirms a mismatch.
-2. Confirm the incoming and outgoing interfaces for each inter-site policy.
-3. Record the exact source and destination address objects or groups for each policy.
-4. Confirm the action, service list, NAT setting, and any attached security profiles from the complete policy settings.
-5. Check for overlapping or duplicate policies and confirm the intended policy order.
-6. Review the configured policy names for consistency. Existing names are preserved here as displayed; naming changes should be made deliberately in the lab.
+The separate VPN verification document retains the evidence and test results for the implemented tunnels. The WAN2 external HTTPS problem described below is a distinct DMZ publishing issue and does not change the recorded completion status of the VPN.
 
-## 7. Verification Plan
+## 6. External HTTPS Access to the DMZ
 
-| Test | Required Evidence |
+The DMZ web server is:
+
+| Field | Value |
 |---|---|
-| HQ Internet access through WAN1 | Client connectivity test, matching policy log, and routing evidence |
-| HQ Internet access through WAN2 | Client connectivity test, matching policy log, and routing evidence |
-| Alexandria Internet access | Client connectivity test and matching policy log |
-| HQ-to-Alexandria connectivity | Successful test between the intended source and destination networks |
-| VPN path behavior | Tunnel status, route selection, and application connectivity |
-| DMZ HTTP/HTTPS access | Connection tests to the intended web server ports and corresponding firewall logs |
-| Denied traffic | A test of a specifically prohibited flow and evidence that it was denied |
+| Server name | `WEB01-DMZ` |
+| Server IP | `192.168.0.146` |
+| Published service | HTTPS |
+| External port | TCP/443 |
+| Internal destination port | TCP/443 |
 
-For each test, record the date, source, destination, protocol/port, result, and relevant evidence filename.
+### 6.1 Recorded VIP Configuration
 
-## DMZ HTTPS Verification Results
+| VIP | Interface | External IP | Mapped IP | Port Mapping |
+|---|---|---|---|---|
+| `VIP-WEB01-HTTPS` | `WAN1-ISP-A (port1)` | `198.51.100.2` | `192.168.0.146` | TCP/443 → 443 |
+| `VIP-WEB01-HTTPS-WAN2` | `WAN2-ISP-B (port2)` | `203.0.113.2` | `192.168.0.146` | TCP/443 → 443 |
 
-### Internal Connectivity
+These addresses reflect the recorded lab configuration. The external VIP addresses match the documented FortiGate WAN interface addresses, so this configuration detail should be checked against the live configuration before any change is made. It is recorded here as observed, not declared correct or changed.
 
-The following tests were performed from `FG-HQ-1`:
+### 6.2 WAN1 — External HTTPS Path
 
-| Test | Result |
-|---|---|
-| ICMP to `192.168.0.146` | Passed — 5 packets received, 0% packet loss |
-| TCP connection to `192.168.0.146:443` | Connection established, then closed by the remote host |
-| WAN1 VIP configuration | DNAT to `192.168.0.146:443` observed in the configuration and debug output |
-| WAN1 external TCP test | TCP connection opened from `INET-EDGE` |
-| WAN2 external TCP test | Timed out |
-| WAN2 debug flow | DNAT was identified, but the packet was dropped with `reverse path check fail` |
-| HTTPS application validation | Not completed |
+The external TCP test from `INET-EDGE` to `198.51.100.2:443` opened a TCP connection. The WAN1 traffic logs showed traffic matching `WAN1-to-WEB01-HTTPS`, with an accepted session start.
 
-### WAN2 Known Issue
+A TCP connection opening is evidence that the TCP attempt reached an accepting endpoint; it does not, by itself, prove successful HTTPS application access. The test result is therefore recorded accurately without claiming that the web page was fully validated.
 
-An external TCP connection attempt from `INET-EDGE` (`203.0.113.250`) to the WAN2 VIP (`203.0.113.2:443`) reached `FG-HQ-1` through `port2`.
+### 6.3 WAN2 — Known Issue
 
-The debug flow showed destination NAT to `192.168.0.146:443`, followed by a reverse-path check failure and packet drop.
+The external TCP test from `INET-EDGE` (`203.0.113.250`) to `203.0.113.2:443` timed out.
 
-The root cause has not yet been confirmed. Further routing and reverse-path investigation is required before changing the configuration.
+The FortiGate debug flow showed:
 
-### Verification Limitations
+- The incoming packet arrived on `port2`.
+- Destination NAT translated the destination to `192.168.0.146:443`.
+- The packet was dropped because the reverse-path check failed.
 
-Successful ICMP reachability and TCP connection establishment do not prove that the web application is functioning correctly. External HTTPS access through both VIPs remains incompletely verified.
+The relevant routing evidence showed two default route candidates:
 
-## 8. Evidence Status and Scope
+- WAN1 through `198.51.100.1`, distance 10 — preferred route.
+- WAN2 through `203.0.113.1`, distance 20 — backup route.
 
-This document records the policy names and selected settings visible in the available lab screenshots. It does not claim that every policy has been independently validated or that every listed traffic flow has passed testing.
+The DMZ network `192.168.0.144/28` was shown as connected through `port7`, which is the documented DMZ-facing interface.
 
-The following must remain separate claims until supporting evidence is captured:
+**Current result:** WAN2 external HTTPS publishing remains unresolved. The observed reverse-path failure is the confirmed drop reason in the captured debug flow; the underlying cause has not yet been established.
 
-- Successful end-to-end application connectivity
-- Correct enforcement of every allow/deny policy
-- Successful Internet access through both WAN links
-- Automatic WAN failover and recovery
-- Successful traffic forwarding across both site-to-site VPN paths
+No arbitrary routing or firewall changes should be made solely from this evidence. Any change must be based on the live routing and policy configuration and followed by a repeat test.
 
-Security profiles are not documented as enabled because their attachment to the listed policies has not been established by the evidence used for this document.
+## 7. Verification Results
+
+| Test | Result | Notes |
+|---|---|---|
+| ICMP from FG-HQ-1 to `192.168.0.146` | Passed | 5 packets received; 0% packet loss |
+| Internal LAN-to-DMZ connectivity | Completed | Existing lab evidence and screenshot |
+| VPN implementation and documented verification | Completed | See the VPN verification document |
+| External TCP attempt through WAN1 | TCP connection opened | HTTPS application response not established by this test alone |
+| External TCP attempt through WAN2 | Failed | Connection timed out |
+| WAN2 VIP destination NAT | Observed | Translation to `192.168.0.146:443` |
+| WAN2 reverse-path check | Failed | Packet dropped according to debug flow |
+
+## 8. Remaining Work
+
+The outstanding issue covered by this document is limited to:
+
+**Resolve and verify external HTTPS access through WAN2 to `WEB01-DMZ` (`192.168.0.146:443`).**
+
+The investigation should establish why the reverse-path check rejects the incoming WAN2 VIP traffic, confirm the correct routing behavior for the external source, and retest the complete connection after any justified correction.
+
+The following work is not classified as incomplete in this document:
+- The implemented VPN.
+- Internal LAN-to-DMZ connectivity.
+- The existence of the documented firewall policies.
+- The WAN1 external TCP connection attempt.
+
+The WAN1 TCP test must not be overstated as a successful HTTPS application test, and the WAN2 issue must not be generalized into a claim that the entire DMZ or VPN implementation is incomplete.
+
+## 9. Evidence and Documentation
+
+Relevant evidence is maintained in the project repository, including the existing configuration screenshots and verification documents.
+
+When recording the next WAN2 test, capture:
+- Test source and destination.
+- Protocol and port.
+- Result of the external TCP/HTTPS attempt.
+- Matching FortiGate traffic log.
+- Debug-flow output.
+- Routing-table details relevant to the external source and DMZ destination.
+
+This evidence will allow the specific WAN2 publishing issue to be closed without reopening or misclassifying already completed project components.
