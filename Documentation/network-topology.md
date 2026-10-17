@@ -2,26 +2,26 @@
 
 ## 1. Project Overview
 
-This project simulates an enterprise network connecting Cairo HQ and Alexandria Branch using GNS3, Cisco IOS devices, FortiGate firewalls, Windows Server, and VMware Workstation.
+This project simulates an enterprise network connecting Cairo Headquarters (HQ) and Alexandria Branch using GNS3, Cisco IOS devices, FortiGate firewalls, Windows Server, and VMware Workstation.
 
 The architecture includes:
 
 - Redundant core switching at Cairo HQ.
 - FortiGate Active-Passive High Availability.
 - Dual ISP connectivity with automatic WAN failover and recovery.
-- VLAN segmentation and HSRP.
+- VLAN segmentation, 802.1Q trunking, and HSRP.
 - Multi-area OSPF routing.
-- Two site-to-site IPsec VPN tunnels with WAN path failover.
+- Two site-to-site IPsec VPN tunnels with WAN path failover and recovery.
 - A DMZ hosting the web server.
 - Windows Active Directory, DNS, and DHCP services.
-- A legacy RIP routing domain connected through ALEX-ASBR.
-- VMware VMnet8 for Internet connectivity.
+- A legacy RIP routing domain with ALEX-ASBR as the intended redistribution point.
+- VMware VMnet8 for Internet/NAT connectivity.
 
 ## 2. Cairo HQ
 
 ### 2.1 Core Switching
 
-The Cairo HQ core layer consists of `HQ-CORE-01` and `HQ-CORE-02`.
+The Cairo HQ core layer consists of `HQ-CORE-1` and `HQ-CORE-2`.
 
 The design uses VLANs, 802.1Q trunking, EtherChannel, spanning tree, HSRP, Layer 3 SVIs, DHCP relay, and OSPF.
 
@@ -56,7 +56,7 @@ The cluster uses Active-Passive HA.
 
 Captured HA output showed healthy cluster status, synchronized configurations, and the expected Primary/Secondary roles. Separate screenshots document a role change and recovery.
 
-These results document HA status and role-change behavior; they do not independently prove uninterrupted application traffic during a failover.
+These results document HA status and role-change behavior. They do not independently prove uninterrupted application traffic during an HA failover.
 
 ### 2.4 Dual ISP Connectivity
 
@@ -75,7 +75,7 @@ The recorded tests demonstrated WAN1 as the preferred default route, failover to
 
 **Result: PASS — Dual-WAN default-route failover and recovery were demonstrated.**
 
-The monitoring record also captured packet loss during one WAN1 recovery observation. This is retained as a monitoring observation and does not negate the demonstrated route changes.
+The failure-state monitor capture showed 54% packet loss on WAN1. The subsequent recovery evidence showed both monitors alive with 0% packet loss. These are observations from different captured states.
 
 #### Dual-WAN Evidence
 
@@ -111,6 +111,8 @@ The monitoring record also captured packet loss during one WAN1 recovery observa
 
 ![Dual-WAN Ping WAN1 Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png)
 
+See [Dual-WAN Failover Verification](../Verification/dual-wan-failover.md).
+
 ### 2.5 DMZ
 
 The recorded DMZ subnet is `192.168.0.144/28`.
@@ -122,9 +124,11 @@ The recorded DMZ subnet is `192.168.0.144/28`.
 
 Internal LAN-to-DMZ access to WEB01 is completed and documented.
 
-The external VIP configurations map TCP port 443 to `192.168.0.146:443` through WAN1 and WAN2. The remaining issue is external HTTPS publishing through WAN2: the recorded debug flow showed destination NAT followed by a reverse-path check failure and packet drop.
+The external VIP configurations map TCP port 443 to `192.168.0.146:443` through WAN1 and WAN2. External HTTPS publishing through WAN2 remains unresolved: the recorded debug flow showed destination NAT followed by a reverse-path check failure and packet drop.
 
 **Result:** LAN-to-DMZ access is completed. WAN2-to-DMZ HTTPS remains the outstanding publishing issue.
+
+See [FortiGate Firewall Policies](fortigate-firewall-policies.md) for the recorded policy and troubleshooting details.
 
 ## 3. Alexandria Branch
 
@@ -142,7 +146,7 @@ The external VIP configurations map TCP port 443 to `192.168.0.146:443` through 
 
 The branch VLANs are USERS, SERVERS, SALES, and MANAGEMENT.
 
-The supplied interface output showed these SVIs down/down at the time of capture. That historical result should not be treated as their current state without a newer check.
+The supplied interface output showed these SVIs down/down at the time of capture. This historical result should not be treated as their current state without a newer check.
 
 ### 3.2 OSPF
 
@@ -163,7 +167,7 @@ The legacy routing design uses RIPv2 and OSPF, with ALEX-ASBR as the intended re
 
 The planned address space includes `10.99.0.0/22`, point-to-point networks `10.99.0.0/30` and `10.99.0.4/30`, and legacy LANs `10.99.1.0/27` and `10.99.2.0/27`.
 
-HQ-CORE-01 displayed `10.99.0.0/22` as an OSPF External Type 2 route. The exact source protocol and redistribution statements are separate configuration details.
+HQ-CORE-1 displayed `10.99.0.0/22` as an OSPF External Type 2 route. The exact source protocol and redistribution statements require configuration-level confirmation.
 
 ## 4. Cairo–Alexandria IPsec VPN
 
@@ -210,6 +214,8 @@ The collected evidence documents active IPsec tunnel state, data counters, routi
 
 The remote-access VPN pool `172.16.1.0/27` is reserved in the design and is separate from the site-to-site VPN verification described above.
 
+See [IPsec VPN Verification](../Verification/ipsec-vpn.md).
+
 ## 5. Routing Architecture
 
 The intended routing design includes:
@@ -223,11 +229,11 @@ The intended routing design includes:
 - ALEX-ASBR as the RIP/OSPF redistribution point.
 - Tunnel A as the preferred path and Tunnel B as the alternate path.
 
-Collected routing outputs showed OSPF adjacencies, a static default route toward the FortiGate transit connection, and an OSPF External Type 2 route for `10.99.0.0/22` on HQ-CORE-01.
+Collected routing outputs showed OSPF adjacencies, a static default route toward the FortiGate transit connection, and an OSPF External Type 2 route for `10.99.0.0/22` on HQ-CORE-1.
 
 The recorded VPN tests also demonstrated route selection through the WAN1 and WAN2 paths in their respective test states.
 
-See [Routing Verification](../Verification/routing.md) and [IPsec VPN Verification](../Verification/ipsec-vpn.md).
+See [Routing Verification](../Verification/routing.md).
 
 ## 6. Windows Server Services
 
@@ -236,7 +242,7 @@ See [Routing Verification](../Verification/routing.md) and [IPsec VPN Verificati
 | DC01 | `192.168.0.36/28` | `192.168.0.33` | Domain: `test.local` |
 | DC02 | `192.168.0.37/28` | `192.168.0.33` | DNS recorded as `192.168.0.36` |
 
-The project includes Active Directory Domain Services, DNS, and DHCP. Service-specific status is documented according to the relevant configuration and test evidence.
+The project includes Active Directory Domain Services, DNS, and DHCP. Service-specific status should be interpreted according to the relevant configuration and test evidence.
 
 ## 7. Management Network
 
@@ -258,7 +264,7 @@ Refer to the addressing documentation for the recorded device assignments.
 | HA role change and recovery | Observed and documented |
 | Dual-WAN default-route failover | PASS |
 | Dual-WAN recovery to WAN1 | PASS |
-| Site-to-site IPsec tunnel operation | PASS |
+| Site-to-site IPsec tunnel operation | PASS — operational in captured states |
 | VPN failover to WAN2 | PASS |
 | VPN recovery to WAN1 | PASS |
 | LAN-to-DMZ access | Completed and documented |
@@ -267,16 +273,18 @@ Refer to the addressing documentation for the recorded device assignments.
 | Exact RIP/OSPF redistribution source | Requires configuration-level confirmation |
 | HA failover with uninterrupted application traffic | Not established by role-change evidence alone |
 
-## 9. Remaining Work
+## 9. Remaining Validation
 
-The remaining work is limited to:
+The main outstanding technical issue is external HTTPS publishing through the WAN2 DMZ VIP.
 
-1. Resolve and retest external HTTPS access through WAN2 to WEB01.
-2. Investigate the WAN1 monitor packet-loss observation if it recurs.
-3. Reconcile the recorded ALEX-CORE link addressing against the current FG-ALEX and ALEX-ASBR configurations.
-4. Confirm the exact RIP/OSPF redistribution statements.
-5. Investigate the origin and purpose of the recorded `172.16.0.x/32` routes.
-6. If required by the project acceptance criteria, capture a controlled HA failover test that verifies actual application traffic.
+Additional configuration-level clarification may be needed for:
+
+1. The recorded ALEX-CORE link-addressing discrepancy.
+2. The exact RIP/OSPF redistribution statements.
+3. The origin and purpose of the recorded `172.16.0.x/32` routes.
+4. A controlled HA failover test with application traffic, if required by the project's acceptance criteria.
+
+These items do not invalidate the recorded successful Dual-WAN route failover/recovery or VPN path failover/recovery tests.
 
 ## 10. Conclusion
 
