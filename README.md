@@ -140,6 +140,8 @@ Successful ICMP reachability and TCP connection establishment do not prove that 
 - [HA Synchronization Status](Images/FG-HQ-HA-Status-In-Sync.png)
 - [HA Primary Status](Images/FG-HQ-HA-Status-Primary.png)
 - [HA Secondary Status](Images/FG-HQ-HA-Status-Secondary.png)
+- [Observed HA Role Change to FG-HQ-2](Images/FG-HQ-HA-Failover-to-HQ-2.png)
+- [HA Recovery Status](Images/FG-HQ-HA-Recovery.png)
 
 ### OSPF and Routing
 
@@ -166,7 +168,7 @@ No configuration change should be considered a verified fix until the relevant c
 
 ## Repository Structure
 
-```text id="f8nq42"
+```text
 Enterprise-Multi-Site-Network-Security-Lab/
 ├── README.md
 ├── Images/
@@ -176,6 +178,8 @@ Enterprise-Multi-Site-Network-Security-Lab/
 │   ├── Dual-WAN-Ping-WAN1-Recovery.png
 │   ├── Dual-WAN-Ping-WAN2-Success.png
 │   ├── Dual-WAN-Recovery-to-WAN1.png
+│   ├── FG-HQ-HA-Failover-to-HQ-2.png
+│   ├── FG-HQ-HA-Recovery.png
 │   ├── FG-HQ-HA-Status-In-Sync.png
 │   ├── FG-HQ-HA-Status-Primary.png
 │   ├── FG-HQ-HA-Status-Secondary.png
