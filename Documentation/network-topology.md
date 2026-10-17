@@ -11,13 +11,13 @@ The architecture includes:
 - Dual ISP connectivity.
 - VLAN segmentation and HSRP.
 - Multi-area OSPF routing.
-- Planned site-to-site IPsec VPN tunnels.
-- A planned DMZ for a web server.
+- Site-to-site IPsec VPN tunnels.
+- A DMZ for a web server.
 - Windows Active Directory and DNS services.
 - A legacy RIP routing domain connected through ALEX-ASBR.
 - VMware VMnet8 for Internet connectivity.
 
-This document describes the current design. Features that have not been verified are identified as planned or requiring verification.
+This document describes the recorded design. Features that have not been verified are identified as planned or requiring verification.
 
 ## 2. Cairo HQ
 
@@ -25,8 +25,8 @@ This document describes the current design. Features that have not been verified
 
 The Cairo HQ core layer consists of:
 
-- HQ-CORE-01
-- HQ-CORE-02
+- `HQ-CORE-01`
+- `HQ-CORE-02`
 
 The design uses VLANs, 802.1Q trunking, EtherChannel, spanning tree, HSRP, Layer 3 SVIs, DHCP relay, and OSPF.
 
@@ -36,8 +36,8 @@ The Cairo VLANs are documented in [`ip-addressing-vlans.md`](ip-addressing-vlans
 
 | VLAN | Name | Network | Core Address | FortiGate Address |
 |---:|---|---|---|---|
-| 901 | FW-TRANSIT-A | 192.168.0.128/30 | CORE-1: 192.168.0.129 | 192.168.0.130 |
-| 902 | FW-TRANSIT-B | 192.168.0.136/30 | CORE-2: 192.168.0.137 | 192.168.0.138 |
+| 901 | FW-TRANSIT-A | `192.168.0.128/30` | CORE-1: `192.168.0.129` | `192.168.0.130` |
+| 902 | FW-TRANSIT-B | `192.168.0.136/30` | CORE-2: `192.168.0.137` | `192.168.0.138` |
 
 The supplied CORE-1 configuration confirms VLAN 901 at `192.168.0.129/30` and a default route through `192.168.0.130`.
 
@@ -47,22 +47,23 @@ Verify the current CORE-2 configuration and physical interface mappings against 
 
 The Cairo firewall pair consists of:
 
-- FG-HQ-01
-- FG-HQ-02
+- `FG-HQ-01`
+- `FG-HQ-02`
 
 The intended HA mode is Active-Passive.
 
 | Function | Interface |
 |---|---|
-| WAN1 | port1 |
-| WAN2 | port2 |
-| HA heartbeat | ports 3 and 4 |
-| Core connections | ports 5 and 6 |
-| DMZ | port7 |
+| WAN1 | `port1` |
+| WAN2 | `port2` |
+| HA heartbeat | `port3`, `port4` |
+| Core connections | `port5`, `port6` |
+| DMZ | `port7` |
+| Dedicated management | `port8` |
 
-The recorded monitored interfaces are ports 1, 2, 5, and 6.
+The recorded monitored interfaces are `port1`, `port2`, `port5`, and `port6`.
 
-Verify HA synchronization, cluster health, and failover behavior before describing redundancy as successfully tested.
+Verify HA synchronization, cluster health, and failover behavior before describing redundancy as successfully tested. The collected role-change and recovery evidence does not independently prove uninterrupted traffic during failover.
 
 ### 2.4 Dual ISP Connectivity
 
@@ -70,12 +71,14 @@ The simulated WAN addressing is:
 
 | Component | Address |
 |---|---|
-| FortiGate WAN1 | 198.51.100.2/29 |
-| ISP-A gateway | 198.51.100.1 |
-| Planned WAN1 VIP | 198.51.100.3 |
-| FortiGate WAN2 | 203.0.113.2/29 |
-| ISP-B gateway | 203.0.113.1 |
-| Planned WAN2 VIP | 203.0.113.3 |
+| FortiGate WAN1 | `198.51.100.2/29` |
+| ISP-A gateway | `198.51.100.1` |
+| WAN1 VIP external address | `198.51.100.2` |
+| FortiGate WAN2 | `203.0.113.2/29` |
+| ISP-B gateway | `203.0.113.1` |
+| WAN2 VIP external address | `203.0.113.2` |
+
+The external VIP addresses above reflect the recorded VIP configuration; they use the same addresses as their respective FortiGate WAN interfaces.
 
 ISP-A connects to the INET node over `198.51.100.248/30`:
 
@@ -89,18 +92,20 @@ ISP-B connects to the INET node over `203.0.113.248/30`:
 
 VMware VMnet8 represents the lab's Internet connection. No additional internal subnet or host configuration is assumed for VMnet8.
 
-WAN failover must be verified through routing tables, link-monitor status, and end-to-end connectivity tests.
+WAN failover must be assessed using routing tables, link-monitor status, and end-to-end connectivity tests. The existing verification record documents observed failover and recovery behavior, but also records limitations in the WAN1 monitor results.
 
 ### 2.5 DMZ
 
-The planned DMZ subnet is `192.168.0.144/28`.
+The recorded DMZ subnet is `192.168.0.144/28`.
 
 | Component | Address |
 |---|---|
-| FortiGate DMZ interface | 192.168.0.145 |
-| WEB01 | 192.168.0.146 |
+| FortiGate DMZ interface | `192.168.0.145` |
+| WEB01 | `192.168.0.146` |
 
-Confirm the actual interface assignments and topology before treating these addresses as operational.
+The recorded VIP configurations map external TCP port 443 to `192.168.0.146:443` through both WAN interfaces.
+
+External HTTPS access through WAN1 and WAN2 has not been fully validated. The WAN2 test recorded a reverse-path check failure and packet drop.
 
 ## 3. Alexandria Branch
 
@@ -110,13 +115,13 @@ The supplied configuration records the following addresses:
 
 | Interface | Address |
 |---|---|
-| Ethernet0/0 | 10.10.1.1/30 |
-| Ethernet0/1 | 10.10.1.5/30 |
-| Loopback0 | 10.10.0.177/32 |
-| VLAN 10 SVI | 10.10.0.2/25 |
-| VLAN 20 SVI | 10.10.0.130/27 |
-| VLAN 30 SVI | 10.10.0.193/28 |
-| VLAN 99 SVI | 10.10.0.162/28 |
+| Ethernet0/0 | `10.10.1.1/30` |
+| Ethernet0/1 | `10.10.1.5/30` |
+| Loopback0 | `10.10.0.177/32` |
+| VLAN 10 SVI | `10.10.0.2/25` |
+| VLAN 20 SVI | `10.10.0.130/27` |
+| VLAN 30 SVI | `10.10.0.193/28` |
+| VLAN 99 SVI | `10.10.0.162/28` |
 
 The branch VLANs are USERS, SERVERS, SALES, and MANAGEMENT.
 
@@ -126,7 +131,7 @@ The supplied interface output showed these four SVIs as down/down. Their current
 
 The supplied ALEX-CORE configuration records:
 
-- OSPF process: 1
+- OSPF process: `1`
 - Router ID: `5.5.5.5`
 - Area 0 network: `10.10.1.0/30`
 - Area 2 network: `10.10.1.4/30`
@@ -150,22 +155,26 @@ The recorded design includes:
 - `10.99.0.0/30` and `10.99.0.4/30` as point-to-point networks.
 - `10.99.1.0/27` and `10.99.2.0/27` as legacy LANs.
 
+The routing table on HQ-CORE-01 displayed `10.99.0.0/22` as an OSPF External Type 2 route. This confirms that the external route existed in the routing table, but does not establish the source protocol or prove the complete redistribution configuration.
+
 Verify ALEX-ASBR's current configuration and routing behavior before documenting redistribution as operational.
 
 ## 4. Cairo–Alexandria VPN
 
-Two route-based IPsec tunnels are planned:
+The design includes two route-based IPsec tunnels:
 
 | Tunnel | Network | Cairo Address | Alexandria Address | OSPF Cost |
 |---|---|---|---|---:|
-| Tunnel A — Primary | 172.16.0.0/30 | 172.16.0.1 | 172.16.0.2 | 10 |
-| Tunnel B — Backup | 172.16.0.4/30 | 172.16.0.5 | 172.16.0.6 | 100 |
+| Tunnel A — Primary | `172.16.0.0/30` | `172.16.0.1` | `172.16.0.2` | 10 |
+| Tunnel B — Backup | `172.16.0.4/30` | `172.16.0.5` | `172.16.0.6` | 100 |
 
 Tunnel A is intended to be the preferred path. Tunnel B is intended to provide an alternative path.
 
-The remote-access VPN pool `172.16.1.0/27` is reserved in the design; its current configuration is unverified.
+Collected FortiGate outputs showed Security Association activity and packet counters for both configured tunnels, as well as OSPF neighbor relationships over the displayed tunnel interfaces on FG-ALEX-01.
 
-Confirm tunnel status, routing, and failover before claiming that VPN redundancy works.
+These observations confirm tunnel and routing activity at the time of capture. End-to-end application connectivity, automatic failover, and recovery to the preferred path remain unverified.
+
+The remote-access VPN pool `172.16.1.0/27` is reserved in the design; its current configuration is unverified.
 
 ## 5. Routing Architecture
 
@@ -183,6 +192,8 @@ The intended routing design is:
 
 The project design specifies that the FortiGates should not originate OSPF default routes, leaving ALEX-ASBR as the planned redistribution point.
 
+Collected routing evidence showed OSPF adjacencies and an OSPF External Type 2 route for `10.99.0.0/22` on HQ-CORE-01. The exact redistribution source and configuration still require confirmation.
+
 Verify OSPF neighbors, route learning, summary propagation, default routes, and redistribution using live device outputs.
 
 ## 6. Windows Server Services
@@ -191,8 +202,8 @@ The recorded Windows Server addressing is:
 
 | Server | Address | Gateway | Notes |
 |---|---|---|---|
-| DC01 | 192.168.0.36/28 | 192.168.0.33 | Domain: `test.local` |
-| DC02 | 192.168.0.37/28 | 192.168.0.33 | DNS recorded as 192.168.0.36 |
+| DC01 | `192.168.0.36/28` | `192.168.0.33` | Domain: `test.local` |
+| DC02 | `192.168.0.37/28` | `192.168.0.33` | DNS recorded as `192.168.0.36` |
 
 The project includes Active Directory Domain Services, DNS, and DHCP.
 
@@ -219,16 +230,18 @@ VMnet8 is treated as the external Internet connection for the lab; no additional
 
 - [ ] Verify HQ-CORE-01 and HQ-CORE-02 transit interfaces and physical mappings.
 - [ ] Verify FortiGate HA health and synchronization.
+- [ ] Verify controlled HA failover and traffic continuity.
 - [ ] Confirm DMZ interface assignments and WEB01 connectivity.
-- [ ] Test WAN1/WAN2 routing and failover.
+- [ ] Complete WAN1/WAN2 routing and failover validation.
 - [ ] Reconcile FG-ALEX and ALEX-CORE link addressing.
 - [ ] Verify Alexandria SVI operational status.
 - [ ] Verify OSPF neighbors, learned routes, summaries, and default routes.
 - [ ] Verify both IPsec tunnels and route preference.
+- [ ] Test end-to-end connectivity between Cairo and Alexandria.
 - [ ] Verify ALEX-ASBR and RIP/OSPF redistribution.
 - [ ] Confirm device assignments for the management addresses.
 - [ ] Verify DC01/DC02 replication, DNS, and DHCP.
 
 ---
 
-**Documentation status:** This file describes the current design based on recorded project information. Items marked planned or requiring verification must not be presented as successfully tested until evidence has been collected.
+**Documentation status:** This file describes the current design based on recorded project information. Items marked planned or requiring verification must not be presented as successfully tested until supporting evidence has been collected.
