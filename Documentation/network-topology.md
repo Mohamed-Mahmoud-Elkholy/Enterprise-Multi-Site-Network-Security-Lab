@@ -111,7 +111,7 @@ The failure-state monitor capture showed 54% packet loss on WAN1. The subsequent
 
 ![Dual-WAN Ping WAN1 Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png)
 
-See [Dual-WAN Failover Verification](../Verification/dual-wan-failover.md).
+See [Dual-WAN Failover Verification](../Verification/dual-wan-verification.md).
 
 ### 2.5 DMZ
 
