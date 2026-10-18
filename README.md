@@ -2,9 +2,9 @@
 
 A virtual enterprise networking and security lab built with **GNS3, Cisco IOS/IOU, FortiGate, Windows Server, and VMware Workstation**.
 
-The project simulates an enterprise network connecting Cairo Headquarters (HQ) and Alexandria Branch. It demonstrates enterprise network design, VLAN segmentation, Layer 2 and Layer 3 switching, dynamic routing, firewall integration, dual-WAN redundancy, site-to-site IPsec VPNs, high availability, and infrastructure services.
+The project simulates an enterprise network connecting Cairo Headquarters (HQ) and Alexandria Branch. It demonstrates VLAN segmentation, Layer 2 and Layer 3 switching, dynamic routing, firewall integration, dual-WAN redundancy, site-to-site IPsec VPNs, high availability, and infrastructure services.
 
-The repository documents the architecture, implementation, troubleshooting process, and verification evidence collected from the lab.
+The repository documents the architecture, implementation, troubleshooting process, configuration inventory, and verification evidence collected from the lab.
 
 ## Network Topology
 
@@ -48,14 +48,14 @@ The repository documents the architecture, implementation, troubleshooting proce
 
 The HQ network includes:
 
-- `HQ-CORE-1` and `HQ-CORE-2` as the core switching layer.
-- `FG-HQ-1` and `FG-HQ-2` in an Active-Passive HA configuration.
+- `HQ-CORE-01` and `HQ-CORE-02` as the core switching layer.
+- `FG-HQ-01` and `FG-HQ-02` in an Active-Passive HA configuration.
 - Department-based VLANs and Layer 3 interfaces.
 - HSRP and EtherChannel.
 - Two simulated ISP connections through WAN1 and WAN2.
 - Internal server connectivity.
 - A DMZ web server at `192.168.0.146`.
-- HTTPS VIP configurations for the two WAN interfaces.
+- HTTPS VIP configurations for both WAN interfaces.
 
 ### Alexandria Branch
 
@@ -68,13 +68,11 @@ The branch network includes:
 
 ### Inter-Site Connectivity
 
-Two route-based IPsec tunnels connect Cairo HQ and Alexandria Branch. The lab includes evidence of tunnel activity and testing of WAN-path changes.
+Two route-based IPsec tunnels connect Cairo HQ and Alexandria Branch. The lab includes evidence of tunnel activity, routing changes, WAN-path failover, and recovery.
 
-The verification documents distinguish observed tunnel activity from confirmed end-to-end application connectivity.
+The verification documents distinguish observed tunnel and routing behavior from confirmed end-to-end application connectivity.
 
 ## Verification Evidence
-
-The following sections summarize the recorded results. Detailed command outputs and screenshots are available in the linked verification documents.
 
 ### 1. Dual-WAN Failover and Recovery
 
@@ -100,10 +98,10 @@ These results document the observed failover and recovery behavior; they do not 
 
 ### 2. FortiGate High Availability
 
-The FortiGate HA pair was observed with:
+The recorded HA status showed:
 
-- `FG-HQ-1` as Primary.
-- `FG-HQ-2` as Secondary.
+- `FG-HQ-01` as Primary.
+- `FG-HQ-02` as Secondary.
 - Synchronization status reported as `in-sync`.
 - HA health reported as `OK`.
 - Recorded role-change and recovery evidence.
@@ -112,7 +110,7 @@ The FortiGate HA pair was observed with:
 
 ![FortiGate HA In-Sync Status](Images/FG-HQ-HA-Status-In-Sync.png)
 
-**Observed Role Change to FG-HQ-2**
+**Observed Role Change to FG-HQ-02**
 
 ![FortiGate HA Failover to HQ-2](Images/FG-HQ-HA-Failover-to-HQ-2.png)
 
@@ -150,17 +148,27 @@ Routing-table evidence confirms the displayed routes at the time of capture; it 
 
 The lab contains two configured route-based IPsec tunnels between Cairo HQ and Alexandria Branch. Verification evidence includes tunnel status, routing information, WAN1/WAN2 path changes, and recovery screenshots.
 
+**VPN Tunnels Before Failover**
+
 ![VPN Tunnels Before Failover](Images/VPN-Tunnels-Before-Failover.png)
+
+**VPN Routing with WAN1 Primary**
 
 ![VPN Routing with WAN1 Primary](Images/VPN-Routing-WAN1-Primary.png)
 
+**WAN1 Down and WAN2 Up**
+
 ![VPN WAN1 Down and WAN2 Up](Images/VPN-WAN1-Down-WAN2-Up.png)
+
+**VPN Failover to WAN2**
 
 ![VPN Failover to WAN2](Images/VPN-Failover-to-WAN2.png)
 
+**VPN Recovery to WAN1**
+
 ![VPN Recovery to WAN1](Images/VPN-Recovery-to-WAN1.png)
 
-The collected evidence documents tunnel and routing behavior during the recorded tests. Refer to the verification document for the specific observations and the distinction between tunnel status and application-level connectivity.
+The collected evidence documents tunnel and routing behavior during the recorded tests. Tunnel status and route changes alone do not prove uninterrupted application connectivity.
 
 [Read the IPsec VPN Verification](Verification/ipsec-vpn.md)
 
@@ -172,7 +180,7 @@ The recorded troubleshooting results were:
 
 | Test | Observed result |
 |---|---|
-| ICMP from `FG-HQ-1` to `192.168.0.146` | Passed: 5 packets received, 0% packet loss |
+| ICMP from `FG-HQ-01` to `192.168.0.146` | Passed: 5 packets received, 0% packet loss |
 | TCP connection to `192.168.0.146:443` from the firewall | Connection established, then closed by the remote host |
 | External TCP test to WAN1 VIP | TCP connection opened; WAN1 HTTPS policy traffic was observed |
 | External TCP test to WAN2 VIP | Timed out |
@@ -193,48 +201,91 @@ A successful TCP connection does not prove that the HTTPS application returns a 
 | [FortiGate HA Verification](Verification/fortigate-ha-verification.md) | HA roles, synchronization, health, and role-change evidence |
 | [Routing Verification](Verification/routing.md) | OSPF neighbors, routing tables, and recorded routing behavior |
 | [IPsec VPN Verification](Verification/ipsec-vpn.md) | VPN status, routing, failover, and recovery evidence |
+| [Configuration Inventory](configs/README.md) | Device configuration file inventory and publication guidance |
+
+## Configuration Inventory
+
+The `configs/` directory contains the following device configuration files:
+
+### Core Switches
+
+- `HQ-CORE-01-running-config.txt`
+- `HQ-CORE-02-running-config.txt`
+- `ALEX-CORE-running-config.txt`
+
+### Access Switches
+
+- `ACC-1-running-config.txt`
+- `ACC-2-running-config.txt`
+- `ALEX-ACC-running-config.txt`
+- `SRV-1-running-config.txt`
+- `SRV-2-running-config.txt`
+
+`SRV-1` and `SRV-2` are switches connected to the server infrastructure, not server machines.
+
+### Routing Devices
+
+- `ALEX-ASBR-running-config.txt`
+- `INET-EDGE-running-config.txt`
+- `ISP-A-running-config.txt`
+- `ISP-B-running-config.txt`
+- `LEG-R1-running-config.txt`
+- `LEG-R2-running-config.txt`
+
+The inventory lists filenames; it does not certify that each configuration is complete, current, or independently validated.
+
+Before publishing configuration files, remove passwords, VPN pre-shared keys, private keys, tokens, and other sensitive information.
 
 ## Repository Structure
 
 ```text
 Enterprise-Multi-Site-Network-Security-Lab/
 ├── README.md
+├── Topology-overview.png
 ├── Images/
 │   ├── Topology-overview.png
 │   ├── Dual-WAN-Failover-to-WAN2.png
 │   ├── Dual-WAN-Monitor-During-Failover.png
-│   ├── Dual-WAN-Ping-WAN1-Recovery.png
-│   ├── Dual-WAN-Ping-WAN2-Success.png
 │   ├── Dual-WAN-Recovery-to-WAN1.png
 │   ├── FG-HQ-HA-Failover-to-HQ-2.png
 │   ├── FG-HQ-HA-Recovery.png
 │   ├── FG-HQ-HA-Status-In-Sync.png
-│   ├── FG-HQ-HA-Status-Primary.png
-│   ├── FG-HQ-HA-Status-Secondary.png
 │   ├── HQ-CORE-1-OSPF-Interfaces.png
 │   ├── HQ-CORE-1-OSPF-Neighbors.png
 │   ├── HQ-CORE-1-Routing-Table.png
 │   ├── VPN-Tunnels-Before-Failover.png
 │   ├── VPN-Routing-WAN1-Primary.png
 │   ├── VPN-WAN1-Down-WAN2-Up.png
-│   ├── VPN-Failover-WAN1-Down-WAN2-Up.png
 │   ├── VPN-Failover-to-WAN2.png
-│   ├── VPN-Recovery-to-WAN1.png
-│   └── VPN-Routing-Before-Failover.png
+│   └── VPN-Recovery-to-WAN1.png
 ├── Documentation/
 │   ├── fortigate-firewall-policies.md
 │   ├── ip-addressing-vlans.md
 │   └── network-topology.md
-├── configs/
-│   └── README.md
-└── Verification/
-    ├── dual-wan-verification.md
-    ├── fortigate-ha-verification.md
-    ├── ipsec-vpn.md
-    └── routing.md
+├── Verification/
+│   ├── dual-wan-verification.md
+│   ├── fortigate-ha-verification.md
+│   ├── ipsec-vpn.md
+│   └── routing.md
+└── configs/
+    ├── README.md
+    ├── ACC-1-running-config.txt
+    ├── ACC-2-running-config.txt
+    ├── ALEX-ACC-running-config.txt
+    ├── ALEX-ASBR-running-config.txt
+    ├── ALEX-CORE-running-config.txt
+    ├── HQ-CORE-01-running-config.txt
+    ├── HQ-CORE-02-running-config.txt
+    ├── INET-EDGE-running-config.txt
+    ├── ISP-A-running-config.txt
+    ├── ISP-B-running-config.txt
+    ├── LEG-R1-running-config.txt
+    ├── LEG-R2-running-config.txt
+    ├── SRV-1-running-config.txt
+    └── SRV-2-running-config.txt
 ```
 
-The `configs/` directory is reserved for sanitized device configurations. Only add configuration files after removing passwords, pre-shared keys, private keys, tokens, and other sensitive information.
+The repository tree above lists the expected configuration filenames. Verify the actual GitHub directory after upload; do not assume every file is present solely because it appears in this document.
 
 ## Security Disclaimer
 
@@ -247,8 +298,8 @@ This is a virtual lab developed for educational purposes, technical practice, an
 
 ## Project Status
 
-The lab implementation and the main redundancy tests have been completed. The repository is being documented with architecture details, verification results, and supporting screenshots.
+The lab documents the main network design and recorded redundancy tests, including Dual-WAN failover/recovery, FortiGate HA state changes, and VPN routing behavior.
 
-The primary outstanding technical issue documented here is **external HTTPS access through the WAN2 DMZ VIP**, where the recorded debug flow showed a reverse-path check failure. This issue remains isolated from the recorded successful Dual-WAN failover/recovery and VPN-path testing.
+The primary outstanding technical issue documented here is **external HTTPS access through the WAN2 DMZ VIP**, where the recorded debug flow showed a reverse-path check failure. This issue remains unresolved in the available evidence.
 
-The repository reports verified results conservatively and distinguishes successful tests from unresolved behavior.
+The project distinguishes successful observed tests from unverified behavior and outstanding troubleshooting items.
