@@ -1,4 +1,5 @@
 # Enterprise Multi-Site Network & Security Infrastructure Lab
+
 ## IP Addressing, VLANs, Routing & Infrastructure
 
 **Environment:** GNS3, Cisco IOS, FortiGate, Windows Server, VMware Workstation  
@@ -25,12 +26,12 @@ The Cairo VLAN networks are summarized as `192.168.0.0/25` in the routing design
 
 Documented switching features:
 
-- VLANs 10, 20, 30, 40, 50, 60, 70, and 99
-- 802.1Q trunking
-- EtherChannel using LACP
-- Rapid-PVST spanning tree
-- HSRP gateway redundancy
-- Layer 3 SVIs and DHCP relay
+- VLANs 10, 20, 30, 40, 50, 60, 70, and 99.
+- 802.1Q trunking.
+- EtherChannel using LACP.
+- Rapid-PVST spanning tree.
+- HSRP gateway redundancy.
+- Layer 3 SVIs and DHCP relay.
 
 ### HSRP Status Recorded for HQ-CORE-01
 
@@ -69,13 +70,13 @@ The supplied `HQ-CORE-01` configuration contains SVI VLAN 901 at `192.168.0.129/
 
 ### HA Design
 
-- Devices: `FG-HQ-01` and `FG-HQ-02`
-- HA mode: Active-Passive
-- Heartbeat interfaces: ports 3 and 4
-- Previously recorded monitored interfaces: ports 1, 2, 5, and 6
-- WAN interfaces: ports 1 and 2
-- Core-facing interfaces: ports 5 and 6
-- DMZ interface: port 7
+- Devices: `FG-HQ-01` and `FG-HQ-02`.
+- HA mode: Active-Passive.
+- Heartbeat interfaces: ports 3 and 4.
+- Previously recorded monitored interfaces: ports 1, 2, 5, and 6.
+- WAN interfaces: ports 1 and 2.
+- Core-facing interfaces: ports 5 and 6.
+- DMZ interface: port 7.
 
 The project handoff records Cairo FortiGate HA as configured. Historical status evidence showed both members in-sync, with HA health reported as OK during the recorded checks. Current HA health and controlled traffic failover still require verification.
 
@@ -175,12 +176,12 @@ The supplied `ALEX-CORE` output shows VLAN 10, 20, 30, and 99 SVIs as `down/down
 
 The supplied `ALEX-CORE` configuration contains:
 
-- OSPF process: 1
-- Router ID: `5.5.5.5`
-- Ethernet0/0 network `10.10.1.0/30` assigned to Area 0
-- Ethernet0/1 network `10.10.1.4/30` assigned to Area 2
-- Area 2 summary configured as `10.10.0.0/24`
-- Default route configured through `10.10.1.2`
+- OSPF process: 1.
+- Router ID: `5.5.5.5`.
+- Ethernet0/0 network `10.10.1.0/30` assigned to Area 0.
+- Ethernet0/1 network `10.10.1.4/30` assigned to Area 2.
+- Area 2 summary configured as `10.10.0.0/24`.
+- Default route configured through `10.10.1.2`.
 
 The intended design treats `ALEX-CORE` as an Area Border Router and `ALEX-ASBR` as the redistribution point for the legacy RIP domain. Verify OSPF neighbors, learned routes, summary advertisement, and default-route reachability before claiming the design is operational.
 
@@ -225,10 +226,10 @@ The device-to-address mapping, gateway, VLAN, and interface assignments have not
 
 **VMnet8 represents the lab's Internet connection.** It is the external Internet/NAT network used by the lab environment. No additional INET-HOST device or separate `192.0.2.0/28` host LAN was added.
 
-- VMware network: `VMnet8`
-- Role in this lab: Internet connectivity for devices that are routed and permitted to access the Internet
-- No separate INET-HOST node or LAN is part of the current design
-- No additional VMnet8 subnet or host IP addresses are specified in this document
+- VMware network: `VMnet8`.
+- Role in this lab: Internet connectivity for devices that are routed and permitted to access the Internet.
+- No separate INET-HOST node or LAN is part of the current design.
+- No additional VMnet8 subnet or host IP addresses are specified in this document.
 
 ## 13. Windows Server — Three-Server Inventory and Comparison
 
@@ -360,14 +361,14 @@ Previously recorded `HQ-CORE-01` output showed:
 
 The following items are not part of the current design:
 
-- Old management network `192.168.1.16/28` and addresses `.17`–`.20`
-- Transit network `192.168.0.132/30`
-- Transit network `192.168.0.140/30`
-- Separate `INET-HOST LAN` `192.0.2.0/28`
-- A separate INET-HOST node
-- Removed HQ access switches `HQ-SW-SALES` and `HQ-SW-AC`
-- Assumptions that new management addresses belong to specific devices without confirmation
-- Claims that WEB01, public VIPs, remote-access VPN, routing failover, or Windows Server services are operational without current verification
+- Old management network `192.168.1.16/28` and addresses `.17`–`.20`.
+- Transit network `192.168.0.132/30`.
+- Transit network `192.168.0.140/30`.
+- Separate `INET-HOST LAN` `192.0.2.0/28`.
+- A separate INET-HOST node.
+- Removed HQ access switches `HQ-SW-SALES` and `HQ-SW-AC`.
+- Assumptions that new management addresses belong to specific devices without confirmation.
+- Claims that WEB01, public VIPs, remote-access VPN, routing failover, or Windows Server services are operational without current verification.
 
 ## 16. Verification Checklist
 
