@@ -1,295 +1,222 @@
-# Network Topology and Architecture
+# Enterprise Multi-Site Network Topology
 
 ## 1. Project Overview
 
-This project simulates an enterprise network connecting Cairo Headquarters (HQ) and Alexandria Branch using GNS3, Cisco IOS devices, FortiGate firewalls, Windows Server, and VMware Workstation.
+This project simulates an enterprise network connecting Cairo Headquarters (HQ) and the Alexandria branch. The lab combines enterprise switching, dynamic routing, firewall security, redundant Internet connectivity, site-to-site VPNs, and Windows Server infrastructure.
 
-The architecture includes:
+The environment is built using GNS3, Cisco IOS devices, FortiGate virtual appliances, VMware Workstation, and Windows Server virtual machines.
+
+The design includes:
 
 - Redundant core switching at Cairo HQ.
+- VLAN segmentation and inter-VLAN routing.
+- HSRP for gateway redundancy.
+- EtherChannel and Spanning Tree Protocol.
+- OSPF routing, including multiple areas and route redistribution.
+- Dual ISP connectivity at Cairo HQ.
 - FortiGate Active-Passive High Availability.
-- Dual ISP connectivity with automatic WAN failover and recovery.
-- VLAN segmentation, 802.1Q trunking, and HSRP.
-- Multi-area OSPF routing.
-- Two site-to-site IPsec VPN tunnels with WAN path failover and recovery.
-- A DMZ hosting the web server.
-- Windows Active Directory, DNS, and DHCP services.
-- A legacy RIP routing domain with ALEX-ASBR as the intended redistribution point.
-- VMware VMnet8 for Internet/NAT connectivity.
+- Two WAN-associated site-to-site IPsec VPN paths.
+- A DMZ web server.
+- Windows Server roles for domain services, DNS, DHCP, and related administration.
+- A separate Alexandria branch network.
 
-## 2. Cairo HQ
+The topology and configuration evidence document the intended design and the observed lab state. A component being shown in the topology does not independently prove that every associated function has passed testing.
 
-### 2.1 Core Switching
+## 2. Network Architecture
 
-The Cairo HQ core layer consists of `HQ-CORE-1` and `HQ-CORE-2`.
+The lab is divided into the following logical components.
 
-The design uses VLANs, 802.1Q trunking, EtherChannel, spanning tree, HSRP, Layer 3 SVIs, DHCP relay, and OSPF.
+### 2.1 Cairo Headquarters
 
-See [IP Addressing and VLANs](ip-addressing-vlans.md).
+Cairo HQ contains the core switching layer, internal VLANs, FortiGate security appliances, two ISP connections, and the DMZ network.
 
-### 2.2 Core-to-FortiGate Transit
+The core switching layer provides internal routing and connects to the FortiGate appliances through the recorded transit network.
 
-| VLAN | Name | Network | Core Address | FortiGate Address |
-|---:|---|---|---|---|
-| 901 | FW-TRANSIT-A | `192.168.0.128/30` | CORE-1: `192.168.0.129` | `192.168.0.130` |
-| 902 | FW-TRANSIT-B | `192.168.0.136/30` | CORE-2: `192.168.0.137` | `192.168.0.138` |
+The FortiGate layer provides:
 
-The recorded CORE-1 configuration confirms VLAN 901 and a default route through `192.168.0.130`.
+- Firewall policy enforcement.
+- Internet access through WAN1 and WAN2.
+- Routing between the internal network, WAN connections, and supported VPN paths.
+- Site-to-site VPN connectivity.
+- DMZ access control.
+- Active-Passive HA.
 
-### 2.3 FortiGate High Availability
+### 2.2 Alexandria Branch
 
-The Cairo firewall cluster consists of:
+The Alexandria branch contains its own FortiGate appliance and internal network infrastructure. Its connectivity to Cairo uses the two recorded WAN-associated VPN paths.
 
-- `FG-HQ-1` — Primary
-- `FG-HQ-2` — Secondary
+The project includes routing and connectivity evidence for the branch-to-HQ design. Individual application flows should be considered verified only when supported by their specific test results.
 
-The cluster uses Active-Passive HA.
+### 2.3 Internet Edge
 
-| Function | Interface |
-|---|---|
-| WAN1 | `port1` |
-| WAN2 | `port2` |
-| HA heartbeat | `port3`, `port4` |
-| Core connections | `port5`, `port6` |
-| DMZ | `port7` |
-| Management | `port8` |
+The simulated Internet edge contains two ISP paths.
 
-Captured HA output showed healthy cluster status, synchronized configurations, and the expected Primary/Secondary roles. Separate screenshots document a role change and recovery.
+- ISP-A provides the primary WAN1 path.
+- ISP-B provides the backup WAN2 path.
+- The `INET-EDGE` router provides the external test point used in the recorded Internet and DMZ publishing tests.
 
-These results document HA status and role-change behavior. They do not independently prove uninterrupted application traffic during an HA failover.
+The lab uses documentation-range addresses for its simulated external networks. These addresses represent the lab topology, not publicly routable production Internet addresses.
 
-### 2.4 Dual ISP Connectivity
+## 3. Cairo HQ VLAN Design
 
-| Component | Address |
-|---|---|
-| FortiGate WAN1 | `198.51.100.2/29` |
-| ISP-A gateway | `198.51.100.1` |
-| FortiGate WAN2 | `203.0.113.2/29` |
-| ISP-B gateway | `203.0.113.1` |
-| INET node on ISP-A network | `198.51.100.250` |
-| INET node on ISP-B network | `203.0.113.250` |
+The recorded HQ core configuration includes the following VLANs:
 
-VMware VMnet8 provides the lab's external Internet/NAT connection.
+| VLAN ID | Name / Purpose | Recorded Network |
+|---|---|---|
+| 10 | USERS | `192.168.0.0/27` |
+| 20 | SERVERS | `192.168.0.32/28` |
+| 30 | IT | `192.168.0.48/28` |
+| 40 | HR | `192.168.0.64/28` |
+| 50 | FINANCE | `192.168.0.80/28` |
+| 60 | SALES | `192.168.0.96/29` |
+| 70 | GUEST | `192.168.0.104/29` |
+| 99 | MANAGEMENT | `192.168.0.112/28` |
+| 901 | FW-TRANSIT-A | `192.168.0.128/30` |
 
-The recorded tests demonstrated WAN1 as the preferred default route, failover to WAN2 when WAN1 became unavailable, and recovery to WAN1 after restoration.
+These entries reflect the recorded HQ core routing information. The project also contains a separate internal transit link with network `192.168.0.136/30` and a DMZ subnet `192.168.0.144/28`.
 
-**Result: PASS — Dual-WAN default-route failover and recovery were demonstrated.**
+VLAN 901 is used for the recorded core-to-firewall transit connection. The complete physical and logical port assignments should be checked against the current GNS3 topology and switch configuration before making any changes.
 
-The failure-state monitor capture showed 54% packet loss on WAN1. The subsequent recovery evidence showed both monitors alive with 0% packet loss. These are observations from different captured states.
+The VLAN addressing plan is documented separately in [IP Addressing and VLANs](ip-addressing-vlans.md).
 
-#### Dual-WAN Evidence
+## 4. Core Switching and Gateway Redundancy
 
-**Before failover — HA status**
+The HQ switching design uses two core switches and HSRP to provide redundant default gateways for the internal VLANs.
 
-![Dual-WAN HA Before Failover](../Images/Dual-WAN-HA-Before-Failover.png)
+The recorded configuration includes:
 
-**Before failover — routing table**
+- VLAN interfaces for the HQ networks.
+- HSRP configuration for internal gateway redundancy.
+- OSPF configuration on the core layer.
+- EtherChannel and Spanning Tree Protocol as part of the switching design.
 
-![Dual-WAN Routing Before Failover](../Images/Dual-WAN-Routing-Before-Failover.png)
+HSRP provides a virtual gateway for configured VLANs. Actual gateway availability during a core-switch failure must be established through a controlled test; configuration evidence alone does not prove uninterrupted client connectivity.
 
-**Before failover — both WAN monitors**
+The project includes screenshots for the HQ core OSPF interfaces, configuration, neighbor state, routing table, and HSRP configuration.
 
-![Dual-WAN Monitor Before Failover](../Images/Dual-WAN-Monitor-Before-Failover.png)
+## 5. OSPF and Routing Design
 
-**During failover — WAN1 down**
+OSPF is used for routing between the documented network segments.
 
-![Dual-WAN Monitor During Failover](../Images/Dual-WAN-Monitor-During-Failover.png)
+The recorded HQ core evidence includes an OSPF neighbor in the `FULL` state on `Vlan901`, with neighbor ID `3.3.3.3` and address `192.168.0.130`.
 
-**Failover — default route switched to WAN2**
+The routing evidence also includes remote routes for networks such as:
 
-![Dual-WAN Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png)
+- `10.10.0.0/24`
+- `10.10.1.0/30`
+- `10.10.1.4/30`
+- `10.99.0.0/22`
+- `192.168.0.136/30`
+- `192.168.0.144/28`
 
-**WAN2 monitor target reachable**
+The route for `10.99.0.0/22` was displayed as an OSPF External Type 2 route.
 
-![Dual-WAN Ping WAN2 Success](../Images/Dual-WAN-Ping-WAN2-Success.png)
+The project design includes multiple OSPF areas and route redistribution. The specific source protocol and redistribution path for an external route must be confirmed from the relevant running configuration rather than inferred from the routing-table entry alone.
 
-**Recovery — preferred route returned to WAN1**
+Detailed routing results are documented in [Routing Verification](../Verification/routing.md).
 
-![Dual-WAN Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png)
+## 6. FortiGate Security Layer
 
-**WAN1 monitor target reachable after recovery**
+### 6.1 Cairo FortiGate HA
 
-![Dual-WAN Ping WAN1 Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png)
+Cairo HQ uses two FortiGate VM64-KVM appliances in Active-Passive mode:
 
-See [Dual-WAN Failover Verification](../Verification/dual-wan-verification.md).
+- `FG-HQ-1`
+- `FG-HQ-2`
 
-### 2.5 DMZ
+The recorded normal cluster state showed `FG-HQ-1` as Primary and `FG-HQ-2` as Secondary, with both members synchronized.
 
-The recorded DMZ subnet is `192.168.0.144/28`.
+The recorded interfaces include:
 
-| Component | Address |
-|---|---|
-| FortiGate DMZ interface | `192.168.0.145` |
-| WEB01 | `192.168.0.146` |
+| Interface | Recorded Purpose | Recorded Address |
+|---|---|---|
+| `port1` | WAN1 / ISP-A | `198.51.100.2/29` |
+| `port2` | WAN2 / ISP-B | `203.0.113.2/29` |
+| `port5` | Inside-A | `192.168.0.130/30` |
+| `port6` | Inside-B | `192.168.0.138/30` |
+| `port7` | DMZ-HQ | DMZ interface |
+| `port8` | Management | `192.168.22.100/24` |
 
-Internal LAN-to-DMZ access to WEB01 is completed and documented.
+The recorded HA heartbeat interfaces are `port3` and `port4`.
 
-The external VIP configurations map TCP port 443 to `192.168.0.146:443` through WAN1 and WAN2. External HTTPS publishing through WAN2 remains unresolved: the recorded debug flow showed destination NAT followed by a reverse-path check failure and packet drop.
+The recorded interface addresses and roles describe the lab state captured in the project evidence. Confirm the live interface configuration before changing any address or connection.
 
-**Result:** LAN-to-DMZ access is completed. WAN2-to-DMZ HTTPS remains the outstanding publishing issue.
+### 6.2 Alexandria FortiGate
 
-See [FortiGate Firewall Policies](fortigate-firewall-policies.md) for the recorded policy and troubleshooting details.
+The Alexandria branch uses `FG-ALEX-01` to enforce local firewall policies and connect the branch to its WAN paths and HQ VPN tunnels.
 
-## 3. Alexandria Branch
+The project includes screenshots of Alexandria firewall policies, interface configuration, and IPsec tunnel status.
 
-### 3.1 ALEX-CORE
+### 6.3 Firewall Policies
 
-| Interface | Recorded Address |
-|---|---|
-| Ethernet0/0 | `10.10.1.1/30` |
-| Ethernet0/1 | `10.10.1.5/30` |
-| Loopback0 | `10.10.0.177/32` |
-| VLAN 10 SVI | `10.10.0.2/25` |
-| VLAN 20 SVI | `10.10.0.130/27` |
-| VLAN 30 SVI | `10.10.0.193/28` |
-| VLAN 99 SVI | `10.10.0.162/28` |
+The firewall policy design includes:
 
-The branch VLANs are USERS, SERVERS, SALES, and MANAGEMENT.
+- Internal-to-Internet policies for WAN1 and WAN2.
+- Inter-site policies for the Cairo–Alexandria VPN paths.
+- Internal access to the DMZ web server.
+- External HTTPS publishing rules for the DMZ VIPs.
 
-The supplied interface output showed these SVIs down/down at the time of capture. This historical result should not be treated as their current state without a newer check.
+Policy configuration and the results of the corresponding connectivity tests are documented in [FortiGate Firewall Policies and Connectivity Verification](fortigate-firewall-policies.md).
 
-### 3.2 OSPF
+## 7. Dual ISP and WAN Failover Design
 
-The supplied ALEX-CORE configuration records:
+Cairo HQ uses two simulated ISP connections.
 
-- OSPF process: `1`
-- Router ID: `5.5.5.5`
-- Area 0 network: `10.10.1.0/30`
-- Area 2 network: `10.10.1.4/30`
-- Area 2 summary: `10.10.0.0/24`
-- Default route via `10.10.1.2`
+| Parameter | ISP-A / WAN1 | ISP-B / WAN2 |
+|---|---|---|
+| Network | `198.51.100.0/29` | `203.0.113.0/29` |
+| ISP gateway | `198.51.100.1` | `203.0.113.1` |
+| FortiGate address | `198.51.100.2` | `203.0.113.2` |
+| Default-route distance | 10 | 20 |
 
-The recorded configuration and design handoff contain an addressing discrepancy for the `10.10.1.0/30` link. The peer addressing should be reconciled against the current running configuration before making changes.
+The captured routing tables showed WAN1 as the preferred default route and WAN2 as the backup route.
 
-### 3.3 Legacy Routing
+The recorded tests demonstrated:
 
-The legacy routing design uses RIPv2 and OSPF, with ALEX-ASBR as the intended redistribution point.
+1. Normal operation with WAN1 selected.
+2. WAN1 monitor failure after the primary path was disconnected.
+3. Default-route switching to WAN2.
+4. Restoration of the WAN1 path.
+5. Recovery of the preferred default route to WAN1.
 
-The planned address space includes `10.99.0.0/22`, point-to-point networks `10.99.0.0/30` and `10.99.0.4/30`, and legacy LANs `10.99.1.0/27` and `10.99.2.0/27`.
+These results establish the recorded default-route failover and recovery behavior. They do not establish uninterrupted application sessions during every transition.
 
-HQ-CORE-1 displayed `10.99.0.0/22` as an OSPF External Type 2 route. The exact source protocol and redistribution statements require configuration-level confirmation.
+See [Dual-WAN Failover and Recovery Verification](../Verification/dual-wan-verification.md).
 
-## 4. Cairo–Alexandria IPsec VPN
+## 8. Site-to-Site IPsec VPN Design
 
-The design includes two route-based IPsec tunnels.
+The lab contains two WAN-associated VPN paths between Cairo HQ and Alexandria:
 
-| Tunnel | Network | Cairo Address | Alexandria Address | Intended OSPF Cost |
-|---|---|---|---|---:|
-| Tunnel A — Primary | `172.16.0.0/30` | `172.16.0.1` | `172.16.0.2` | 10 |
-| Tunnel B — Backup | `172.16.0.4/30` | `172.16.0.5` | `172.16.0.6` | 100 |
+- `Cairo-Alex-WAN1`
+- `Cairo-Alex-WAN2`
 
-The collected evidence documents active IPsec tunnel state, data counters, routing through the preferred WAN1 path, failover to WAN2, and recovery to WAN1.
+The recorded routing evidence shows remote networks associated with the WAN1 tunnel path under the normal condition, the WAN2 tunnel path during failover, and the preferred WAN1 path after recovery.
 
-**Result: PASS — VPN path failover to WAN2 and recovery to WAN1 were demonstrated by the recorded lab tests.**
+The project includes tunnel-status screenshots from both FortiGate appliances and routing evidence for the recorded transitions.
 
-### VPN Evidence
-
-**Tunnel status before failover**
-
-![VPN Tunnels Before Failover](../Images/VPN-Tunnels-Before-Failover.png)
-
-**Routing before failover**
-
-![VPN Routing Before Failover](../Images/VPN-Routing-Before-Failover.png)
-
-**WAN1 as the primary route**
-
-![VPN Routing WAN1 Primary](../Images/VPN-Routing-WAN1-Primary.png)
-
-**WAN1 down and WAN2 up**
-
-![VPN WAN1 Down WAN2 Up](../Images/VPN-WAN1-Down-WAN2-Up.png)
-
-**VPN failover state**
-
-![VPN Failover WAN1 Down WAN2 Up](../Images/VPN-Failover-WAN1-Down-WAN2-Up.png)
-
-**Failover to WAN2**
-
-![VPN Failover to WAN2](../Images/VPN-Failover-to-WAN2.png)
-
-**Recovery to WAN1**
-
-![VPN Recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png)
-
-The remote-access VPN pool `172.16.1.0/27` is reserved in the design and is separate from the site-to-site VPN verification described above.
+These results demonstrate the recorded VPN routing failover and recovery. They do not independently prove zero packet loss or uninterrupted application sessions during a path change.
 
 See [IPsec VPN Verification](../Verification/ipsec-vpn.md).
 
-## 5. Routing Architecture
+## 9. DMZ Web Server
 
-The intended routing design includes:
+The HQ DMZ contains the server named `WEB01-DMZ`.
 
-- Cairo internal VLAN networks in OSPF Area 1.
-- Cairo core-to-firewall transit in OSPF Area 0.
-- Alexandria local VLAN networks in OSPF Area 2.
-- Alexandria backbone connectivity in OSPF Area 0.
-- Cairo summary `192.168.0.0/25`.
-- Alexandria summary `10.10.0.0/24`.
-- ALEX-ASBR as the RIP/OSPF redistribution point.
-- Tunnel A as the preferred path and Tunnel B as the alternate path.
-
-Collected routing outputs showed OSPF adjacencies, a static default route toward the FortiGate transit connection, and an OSPF External Type 2 route for `10.99.0.0/22` on HQ-CORE-1.
-
-The recorded VPN tests also demonstrated route selection through the WAN1 and WAN2 paths in their respective test states.
-
-See [Routing Verification](../Verification/routing.md).
-
-## 6. Windows Server Services
-
-| Server | Address | Gateway | Notes |
-|---|---|---|---|
-| DC01 | `192.168.0.36/28` | `192.168.0.33` | Domain: `test.local` |
-| DC02 | `192.168.0.37/28` | `192.168.0.33` | DNS recorded as `192.168.0.36` |
-
-The project includes Active Directory Domain Services, DNS, and DHCP. Service-specific status should be interpreted according to the relevant configuration and test evidence.
-
-## 7. Management Network
-
-The management network uses `192.168.22.0/24`.
-
-Recorded management addresses include:
-
-- `192.168.22.100`
-- `192.168.22.110`
-- `192.168.22.120`
-
-Refer to the addressing documentation for the recorded device assignments.
-
-## 8. Verification Summary
-
-| Feature | Recorded Result |
+| Parameter | Value |
 |---|---|
-| FortiGate HA health and synchronization | PASS — healthy and in-sync in captured output |
-| HA role change and recovery | Observed and documented |
-| Dual-WAN default-route failover | PASS |
-| Dual-WAN recovery to WAN1 | PASS |
-| Site-to-site IPsec tunnel operation | PASS — operational in captured states |
-| VPN failover to WAN2 | PASS |
-| VPN recovery to WAN1 | PASS |
-| LAN-to-DMZ access | Completed and documented |
-| OSPF adjacencies and recorded routes | Confirmed in captured outputs |
-| External HTTPS from WAN2 to DMZ | Outstanding issue — reverse-path check failure observed |
-| Exact RIP/OSPF redistribution source | Requires configuration-level confirmation |
-| HA failover with uninterrupted application traffic | Not established by role-change evidence alone |
+| Server name | `WEB01-DMZ` |
+| IP address | `192.168.0.146` |
+| Subnet | `192.168.0.144/28` |
+| Firewall interface | `DMZ-HQ (port7)` |
+| Published service | HTTPS on TCP/443 |
+| Internal services configured in policy | HTTP, HTTPS, and ICMP |
 
-## 9. Remaining Validation
+The recorded internal tests showed successful HTTP connectivity from `192.168.0.54` to `192.168.0.146:80` and successful ICMP reachability from the FortiGate to the server.
 
-The main outstanding technical issue is external HTTPS publishing through the WAN2 DMZ VIP.
+Internal TCP connectivity to port 443 produced mixed results in two recorded attempts.
 
-Additional configuration-level clarification may be needed for:
+External publishing through WAN1 produced a successful TCP connection, but the evidence did not establish a successful HTTPS application response.
 
-1. The recorded ALEX-CORE link-addressing discrepancy.
-2. The exact RIP/OSPF redistribution statements.
-3. The origin and purpose of the recorded `172.16.0.x/32` routes.
-4. A controlled HA failover test with application traffic, if required by the project's acceptance criteria.
+External publishing through the WAN2 VIP remains unresolved. The captured debug flow showed destination NAT to `192.168.0.146:443` followed by `reverse path check fail`.
 
-These items do not invalidate the recorded successful Dual-WAN route failover/recovery or VPN path failover/recovery tests.
-
-## 10. Conclusion
-
-The lab documents a multi-site enterprise network with redundant Cairo core switching, FortiGate Active-Passive HA, dual ISP paths, multi-area OSPF, two site-to-site IPsec tunnels, a segmented DMZ, and Windows Server services.
-
-The recorded evidence demonstrates Dual-WAN route failover and recovery, VPN path failover and recovery, IPsec tunnel activity, OSPF routing activity, and internal LAN-to-DMZ access.
-
-The outstanding external publishing issue is WAN2-to-DMZ HTTPS. It is not a general failure of the VPN, Dual-WAN routing, or internal DMZ access.
+The cause of the WAN2 reverse-path failure has not been confirmed. It must not be described as fixed until the relevant configuration is reviewed and a new
