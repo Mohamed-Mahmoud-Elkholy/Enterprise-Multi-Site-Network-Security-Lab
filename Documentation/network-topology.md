@@ -219,4 +219,65 @@ External publishing through WAN1 produced a successful TCP connection, but the e
 
 External publishing through the WAN2 VIP remains unresolved. The captured debug flow showed destination NAT to `192.168.0.146:443` followed by `reverse path check fail`.
 
-The cause of the WAN2 reverse-path failure has not been confirmed. It must not be described as fixed until the relevant configuration is reviewed and a new
+The cause of the WAN2 reverse-path failure has not been confirmed. It must not be described as fixed until the relevant configuration is reviewed and a new test succeeds.
+
+## 10. Windows Server Infrastructure
+
+The project includes Windows Server infrastructure for domain services and network administration.
+
+The available evidence includes screenshots related to:
+
+- Domain-controller configuration.
+- Active Directory replication.
+- Domain joining of a Windows client.
+- DHCP scope configuration and lease renewal.
+- DHCP scope options and address pools.
+- Group Policy configuration and client-side enforcement.
+- IT security group membership.
+- Windows client connectivity to the HQ and Alexandria networks.
+
+These screenshots document the displayed states and tests. Each Windows Server role should be considered verified according to its own evidence, rather than assuming that all services are working merely because a server is present in the topology.
+
+## 11. Verification Status
+
+| Component | Recorded Status | Evidence Scope |
+|---|---|---|
+| HQ OSPF neighbor | PASS | Neighbor state `FULL` in the captured output |
+| HQ remote routes | PASS | Recorded routes present in the routing table |
+| Dual-WAN failover | PASS | Default route switched to WAN2 during the test |
+| Dual-WAN recovery | PASS | Default route returned to WAN1 |
+| VPN routing failover | PASS | Remote routes associated with the WAN2 tunnel path |
+| VPN routing recovery | PASS | Preferred route returned to the WAN1 path |
+| FortiGate HA synchronization | PASS | Healthy, synchronized state captured |
+| HA traffic continuity | Not fully verified | Available evidence does not prove uninterrupted traffic during a controlled failover |
+| Internal DMZ HTTP | PASS | TCP/80 connectivity succeeded from `192.168.0.54` |
+| Internal DMZ HTTPS | MIXED | One recorded TCP/443 failure and one success |
+| External WAN1 HTTPS publishing | PARTIAL | TCP connection opened; application-level HTTPS response not established |
+| External WAN2 HTTPS publishing | FAIL | Timeout and reverse-path check failure recorded |
+
+The status table reflects the evidence described in the verification documents. It should be updated only when additional tests produce new evidence.
+
+## 12. Repository Documentation
+
+The repository separates topology documentation, configuration evidence, and verification results.
+
+- [README](../README.md)
+- [IP Addressing and VLANs](ip-addressing-vlans.md)
+- [FortiGate Firewall Policies](fortigate-firewall-policies.md)
+- [Routing Verification](../Verification/routing.md)
+- [Dual-WAN Verification](../Verification/dual-wan-verification.md)
+- [IPsec VPN Verification](../Verification/ipsec-vpn.md)
+- [FortiGate HA Verification](../Verification/fortigate-ha-verification.md)
+- [Configuration Files](../configs/README.md)
+
+The repository should contain only configuration files that have been reviewed and sanitized. Passwords, pre-shared keys, private keys, tokens, and other sensitive values must not be published.
+
+## 13. Conclusion
+
+The project documents a multi-site enterprise network with segmented HQ VLANs, redundant core gateways, OSPF routing, FortiGate HA, dual ISP connectivity, two WAN-associated VPN paths, a DMZ web server, and Windows Server infrastructure.
+
+The recorded tests demonstrate Dual-WAN default-route failover and recovery, VPN routing failover and recovery, OSPF adjacency formation, and internal HTTP access to the DMZ server.
+
+HA traffic continuity has not been conclusively verified during a controlled failover. External HTTPS publishing through the WAN2 VIP remains unresolved due to the recorded reverse-path check failure.
+
+These limitations are retained explicitly so the topology documentation reflects the demonstrated lab results rather than treating every configured component as fully verified.
