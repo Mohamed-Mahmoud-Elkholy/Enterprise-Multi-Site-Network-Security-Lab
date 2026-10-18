@@ -189,7 +189,7 @@ A successful TCP connection does not prove that the HTTPS application returns a 
 | [Network Topology and Architecture](Documentation/network-topology.md) | Network design, device roles, and site architecture |
 | [IP Addressing and VLANs](Documentation/ip-addressing-vlans.md) | VLAN IDs, subnets, and gateway addressing |
 | [FortiGate Firewall Policies](Documentation/fortigate-firewall-policies.md) | Firewall policies, DMZ VIPs, and observed connectivity |
-| [Dual-WAN Failover Verification](Verification/dual-wan-failover.md) | WAN failover, monitoring, and recovery evidence |
+| [Dual-WAN Failover Verification](Verification/dual-wan-verification.md) | WAN failover, monitoring, and recovery evidence |
 | [FortiGate HA Verification](Verification/fortigate-ha-verification.md) | HA roles, synchronization, health, and role-change evidence |
 | [Routing Verification](Verification/routing.md) | OSPF neighbors, routing tables, and recorded routing behavior |
 | [IPsec VPN Verification](Verification/ipsec-vpn.md) | VPN status, routing, failover, and recovery evidence |
