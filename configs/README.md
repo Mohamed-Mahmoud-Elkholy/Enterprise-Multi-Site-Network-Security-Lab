@@ -1,150 +1,94 @@
 # Network Device Configurations
 
-This directory stores sanitized configuration exports collected from the Enterprise Multi-Site Network & Security Infrastructure Lab.
+This directory contains configuration files for network devices used in the Enterprise Multi-Site Network Security Lab.
 
-The repository documents a multi-site network connecting Cairo HQ and the Alexandria branch. Configuration files should reflect the actual device configuration collected from GNS3, Cisco IOS, and FortiGate appliances.
+The inventory below documents the configuration files prepared locally. A file is considered part of the GitHub repository only after it has been uploaded and committed.
 
-**Important:** A planned configuration is not evidence of a deployed configuration. Only publish files collected from the lab, and clearly distinguish collected configuration from independently verified behavior.
+## 1. Core Switches
 
-## 1. Configuration Inventory
+| Device | Configuration File |
+|---|---|
+| HQ-CORE-01 | `HQ-CORE-01-running-config.txt` |
+| HQ-CORE-02 | `HQ-CORE-02-running-config.txt` |
+| ALEX-CORE | `ALEX-CORE-running-config.txt` |
 
-The following files are intended for collection and review. Their listing does not mean that the files already exist or that their configurations have been verified.
+These switches provide the core network infrastructure for Cairo HQ and the Alexandria branch.
 
-| Device / Component | Suggested Filename | Configuration Scope |
-|---|---|---|
-| Cairo Core Switch 1 | `HQ-CORE-01.txt` | VLANs, SVIs, HSRP, EtherChannel, STP, OSPF, routing, DHCP relay |
-| Cairo Core Switch 2 | `HQ-CORE-02.txt` | VLANs, SVIs, HSRP, EtherChannel, STP, OSPF, routing, DHCP relay |
-| Alexandria Core Switch | `ALEX-CORE.txt` | VLANs, SVIs, routed links, OSPF, summaries, default route |
-| Alexandria ASBR | `ALEX-ASBR.txt` | OSPF, RIP, redistribution, route tagging and filtering |
-| Cairo ISP-A Router | `ISP-A.txt` | WAN addressing and routing toward the simulated Internet edge |
-| Cairo ISP-B Router | `ISP-B.txt` | WAN addressing and routing toward the simulated Internet edge |
-| Internet Edge Router | `INET-EDGE.txt` | Simulated external test networks and routing |
-| Cairo FortiGate | `FG-HQ-sanitized.conf` | Interfaces, routes, firewall policies, VIPs, HA, VPN, link monitors |
-| Alexandria FortiGate | `FG-ALEX-sanitized.conf` | Interfaces, routes, firewall policies, VPN and relevant security settings |
+## 2. Access Switches
 
-Use filenames that match the actual device hostnames where possible. If the device hostname differs from the suggested filename, preserve the real hostname and document the difference.
+| Device | Configuration File |
+|---|---|
+| ACC-1 | `ACC-1-running-config.txt` |
+| ACC-2 | `ACC-2-running-config.txt` |
+| ALEX-ACC | `ALEX-ACC-running-config.txt` |
+| SRV-1 | `SRV-1-running-config.txt` |
+| SRV-2 | `SRV-2-running-config.txt` |
 
-## 2. Required Collection Procedure
+SRV-1 and SRV-2 are switches connected to the server infrastructure. They are not server machines.
 
-Collect the configuration directly from the relevant device before publishing it.
+## 3. Routing Devices
 
-### 2.1 Cisco IOS Devices
+| Device | Configuration File |
+|---|---|
+| ALEX-ASBR | `ALEX-ASBR-running-config.txt` |
+| INET-EDGE | `INET-EDGE-running-config.txt` |
+| ISP-A | `ISP-A-running-config.txt` |
+| ISP-B | `ISP-B-running-config.txt` |
+| LEG-R1 | `LEG-R1-running-config.txt` |
+| LEG-R2 | `LEG-R2-running-config.txt` |
 
-For Cisco IOS devices, collect the relevant running configuration and supporting operational output.
+These devices represent the routing and WAN components included in the lab.
 
-Useful read-only commands include:
+## 4. Configuration File Status
 
-```text
-show running-config
-show ip interface brief
-show vlan brief
-show interfaces trunk
-show etherchannel summary
-show spanning-tree summary
-show standby brief
-show ip ospf neighbor
-show ip route
-show ip protocols
-```
+The local folder screenshot shows 14 configuration files:
 
-Run only commands supported by the device and IOS image. Include only the outputs relevant to the configuration being documented.
+- 3 core switches
+- 5 access switches, including SRV-1 and SRV-2
+- 6 routing devices
 
-A configuration export shows what is configured. Operational commands show the state observed when the commands were executed. Keep these forms of evidence distinct.
+The filenames and file sizes are visible in the local folder listing. The configuration contents have not been independently validated as complete or correct.
 
-### 2.2 FortiGate Devices
+The following FortiGate files are not included in this inventory because they were previously observed as empty files:
 
-Collect the required FortiGate configuration from the actual lab appliances.
+- `FG-ALEX-01-config.txt`
+- `FG-HQ-01-config.txt`
+- `FG-HQ-02-config.txt`
 
-Review the following areas where applicable:
+Do not add these files to the published inventory until they contain valid configuration content.
 
-- Interface addressing and aliases.
-- Static and dynamic routing configuration.
-- Firewall policies and address objects/groups.
-- Virtual IPs and external service publishing.
-- HA settings and heartbeat interfaces.
-- IPsec Phase 1 and Phase 2 configuration.
-- Link-monitor settings and their targets.
-- Relevant security profiles.
+## 5. Security Considerations
 
-Do not publish secrets or private material. Where a command or configuration section includes sensitive values, sanitize it before adding the file to GitHub.
+Before publishing configuration files, review and redact sensitive information, including:
 
-The exact collection method should match the FortiOS version and the configuration format supported by the appliance.
+- Passwords and password hashes
+- VPN pre-shared keys and private keys
+- SNMP community strings
+- Authentication secrets and tokens
+- Certificates or other sensitive security material
+- Internal addressing or operational details that should not be public
 
-## 3. Configuration Sanitization and Security
+Use placeholders such as `<REDACTED>` where necessary. Never publish credentials or configuration data without authorization.
 
-**Never publish the following:**
-
-- Administrator passwords or password hashes.
-- IPsec pre-shared keys.
-- Private keys or private certificates containing key material.
-- API tokens, access tokens, or session credentials.
-- SNMP community strings or other authentication secrets.
-- Sensitive personal data or credentials embedded in comments.
-- Other secrets that could enable unauthorized access.
+## 6. Validation Guidelines
 
 Before committing a configuration file:
 
-1. Inspect the complete file, including comments and embedded scripts.
-2. Replace sensitive values with explicit placeholders such as `<REDACTED>`.
-3. Preserve the configuration structure where safe, but do not imply that a redacted file can be imported without modification.
-4. Check the Git diff to confirm that no secrets were introduced.
-5. Verify that the file is appropriate for public release.
+1. Confirm that the file is not empty.
+2. Verify the device hostname and intended role.
+3. Confirm that the configuration belongs to the correct lab device.
+4. Remove sensitive information.
+5. Check that the documented configuration reflects the current lab state.
+6. Update this inventory whenever files are added, removed, or renamed.
 
-A file should be described as **sanitized** only after it has been reviewed for sensitive information.
+## 7. Repository Status
 
-## 4. Verification Status
+This README documents the local configuration inventory shown during project preparation. It does not confirm that these files have already been uploaded to GitHub.
 
-Use the following status labels in filenames, documentation, or a configuration inventory when necessary:
+Only files committed under the `configs/` directory are available to repository visitors.
 
-- **Collected:** Exported from the actual lab device.
-- **Sanitized:** Reviewed and edited to remove sensitive information.
-- **Reviewed:** Checked for consistency with the documented design.
-- **Tested:** The relevant configuration behavior was tested, with evidence recorded separately.
-- **Not Verified:** The configuration or its operational behavior has not been independently confirmed.
+## 8. Project Scope
 
-These labels are not interchangeable. For example, a configuration can be collected and sanitized without proving that the resulting network behavior is correct.
+These configurations support the Enterprise Multi-Site Network Security Lab, covering the Cairo HQ network, Alexandria branch, core and access switching, routing infrastructure, and WAN connectivity.
 
-## 5. Known Configuration Review Priorities
-
-The following items require careful reconciliation with the live lab before configuration changes are made:
-
-- The Cairo core-to-FortiGate transit links using `192.168.0.128/30` and `192.168.0.136/30`.
-- The Alexandria routed links and the discrepancy between the planned addresses and the recorded `ALEX-CORE` interface configuration.
-- The Alexandria SVIs that were recorded as `down/down`.
-- The DMZ addressing conflict involving `192.168.0.145` and `192.168.0.146`.
-- The intended OSPF areas, passive-interface behavior, route summaries, and RIP/OSPF redistribution.
-- The WAN1 and WAN2 default routes, link-monitor status, and failover/recovery behavior.
-- The FortiGate WAN2 VIP issue, where the recorded debug flow showed a reverse-path check failure after destination NAT.
-
-These are review priorities, not instructions to change the configuration immediately. Compare the live configuration, connected peers, routing state, and relevant test results before applying any change.
-
-## 6. Relationship to Verification Evidence
-
-Configuration files should be linked to the relevant verification documentation when that relationship is established.
-
-- [Routing Verification](../Verification/routing.md)
-- [Dual-WAN Failover and Recovery Verification](../Verification/dual-wan-verification.md)
-- [IPsec VPN Verification](../Verification/ipsec-vpn.md)
-- [FortiGate HA Verification](../Verification/fortigate-ha-verification.md)
-- [FortiGate Firewall Policies and Connectivity Verification](../Documentation/fortigate-firewall-policies.md)
-- [Network Topology](../Documentation/network-topology.md)
-- [IP Addressing and VLANs](../Documentation/ip-addressing-vlans.md)
-
-A configuration file supports review of the deployed settings. It does not replace test evidence for routing, failover, application access, or security behavior.
-
-## 7. Current Repository Status
-
-This README defines the expected configuration collection and publication process.
-
-Do not assume that the inventory above represents files already committed to this directory. Update this section after actual configuration exports have been added, reviewed, and sanitized.
-
-When a configuration file is added, record:
-
-- Device hostname.
-- Platform and software version, where known.
-- Collection date, where known.
-- Whether the file has been sanitized.
-- Whether the configuration has been reviewed.
-- Which behaviors, if any, have been independently tested.
-
-**Publication rule:** Only describe a configuration as collected, reviewed, sanitized, or tested when the corresponding work has actually been completed and supported by evidence.
+Refer to the project topology, IP addressing documentation, and verification reports for additional context about the network design and tested behavior.
