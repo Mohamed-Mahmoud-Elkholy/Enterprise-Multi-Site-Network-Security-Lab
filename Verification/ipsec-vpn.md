@@ -1,115 +1,176 @@
-# IPsec VPN Verification
+# IPsec VPN Failover and Recovery Verification
 
 ## 1. Overview
 
-This document records the implementation and verification of site-to-site IPsec VPN connectivity between Cairo Headquarters and Alexandria Branch.
+This document records the IPsec VPN routing and failover tests performed in the Enterprise Multi-Site Network & Security Infrastructure Lab connecting Cairo Headquarters and the Alexandria branch.
 
-The design includes two route-based IPsec VPN tunnels:
+The lab uses two WAN paths to provide alternative connectivity between the sites:
 
-| Tunnel | Purpose | Configured Preference |
+- **WAN1:** Primary path under normal operating conditions.
+- **WAN2:** Backup path used during the recorded failover test.
+
+The verification covers tunnel status, route selection, failover to WAN2, and recovery to WAN1.
+
+This document distinguishes between tunnel status, routing-table evidence, and end-to-end connectivity tests. A tunnel being up does not independently prove that all application traffic can pass through it.
+
+## 2. VPN Topology and Addressing
+
+The recorded lab uses the following WAN addressing:
+
+| Parameter | Cairo WAN1 | Cairo WAN2 |
 |---|---|---|
-| `Cairo-Alex-WAN1` | Primary inter-site path | Preferred |
-| `Cairo-Alex-WAN2` | Backup inter-site path | Secondary |
+| FortiGate interface | `port1` | `port2` |
+| FortiGate IP | `198.51.100.2/29` | `203.0.113.2/29` |
+| ISP gateway | `198.51.100.1` | `203.0.113.1` |
+| Associated tunnel | `Cairo-Alex-WAN1` | `Cairo-Alex-WAN2` |
 
-The lab uses both tunnels to provide redundant inter-site connectivity. Verification covers tunnel status, routing-table evidence, failover to the backup WAN path, and recovery to the preferred WAN path.
+The captured routing tables show the following tunnel next hops:
 
-## 2. VPN Tunnel Status Before Failover
+| VPN Path | Tunnel Next Hop |
+|---|---|
+| `Cairo-Alex-WAN1` | `198.51.100.10` |
+| `Cairo-Alex-WAN2` | `203.0.113.10` |
 
-The collected FortiGate evidence shows both configured IPsec tunnels established before the failover test, with incoming and outgoing data counters present.
+These values describe the recorded lab topology. They are not a substitute for the complete IPsec Phase 1 and Phase 2 configuration.
 
-**Result: PASS — Both VPN tunnels were operational in the captured pre-failover state.**
+## 3. Normal Operation — WAN1 Preferred
 
-![VPN tunnels before failover](../Images/VPN-Tunnels-Before-Failover.png)
+The normal-operation evidence shows the WAN1-associated VPN path selected for the recorded remote routes.
 
-![VPN routing before failover](../Images/VPN-Routing-Before-Failover.png)
-
-## 3. Primary Routing Through WAN1
-
-The captured FortiGate routing table showed the remote networks routed through `Cairo-Alex-WAN1`, with tunnel next hop `198.51.100.10`.
-
-The default route was:
+The FortiGate routing table showed the default route through WAN1:
 
 ```text
 S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
 ```
 
-**Result: PASS — WAN1 was the preferred path in the recorded routing state.**
+The captured routing table associated the following remote networks with `Cairo-Alex-WAN1`:
 
-![VPN routing with WAN1 as primary](../Images/VPN-Routing-WAN1-Primary.png)
+| Destination | Route Type | Tunnel Next Hop |
+|---|---|---|
+| `10.10.0.0/24` | OSPF Inter-Area | `198.51.100.10` |
+| `10.10.1.0/30` | OSPF | `198.51.100.10` |
+| `10.10.1.4/30` | OSPF Inter-Area | `198.51.100.10` |
+| `10.99.0.0/22` | OSPF External Type 2 | `198.51.100.10` |
 
-## 4. Failover to WAN2
+**Result: PASS — The recorded routing table showed the WAN1-associated VPN path selected for the listed remote networks.**
 
-During the recorded failover test, WAN1 became unavailable while WAN2 remained operational.
+The route entries establish the selected routing path at the time of capture. They do not independently prove that every remote host or application was reachable.
 
-The captured VPN and routing evidence shows the WAN1-down/WAN2-up state and the transition to the backup path.
+## 4. VPN Tunnel Status Before Failover
 
-The default route through WAN2 was:
+The project contains screenshots of the IPsec tunnel status on both the Cairo and Alexandria FortiGate appliances.
+
+**Evidence — Cairo IPsec tunnels**
+
+![Cairo IPsec tunnel status](../Images/FG-HQ-IpsecTunnels.png)
+
+**Evidence — Alexandria IPsec tunnels**
+
+![Alexandria IPsec tunnel status](../Images/FG-ALEX-IpsecTunnels.png)
+
+These screenshots document the displayed tunnel state at the time they were captured. Tunnel status must be considered together with routing and connectivity evidence when evaluating the complete site-to-site path.
+
+## 5. Failover from WAN1 to WAN2
+
+The recorded VPN failover evidence shows the WAN2-associated tunnel path selected after the primary WAN1 path became unavailable.
+
+The captured FortiGate routing table showed the default route through WAN2:
 
 ```text
 S* 0.0.0.0/0 [20/0] via 203.0.113.1, port2
 ```
 
-Remote routes were also observed through `Cairo-Alex-WAN2`, with tunnel next hop `203.0.113.10`.
+The routing table also showed the listed remote networks associated with `Cairo-Alex-WAN2`:
 
-**Result: PASS — The recorded tests demonstrated failover from WAN1 to WAN2.**
+| Destination | Route Type | Tunnel Next Hop |
+|---|---|---|
+| `10.10.0.0/24` | OSPF Inter-Area | `203.0.113.10` |
+| `10.10.1.0/30` | OSPF | `203.0.113.10` |
+| `10.10.1.4/30` | OSPF Inter-Area | `203.0.113.10` |
+| `10.99.0.0/22` | OSPF External Type 2 | `203.0.113.10` |
 
-![VPN WAN1 down and WAN2 up](../Images/VPN-WAN1-Down-WAN2-Up.png)
+**Result: PASS — The recorded routing evidence showed the remote routes using the WAN2-associated VPN path during failover.**
 
-![VPN dashboard showing WAN1 down and WAN2 up](../Images/VPN-Failover-WAN1-Down-WAN2-Up.png)
+### 5.1 Failover Evidence
 
 ![VPN failover to WAN2](../Images/VPN-Failover-to-WAN2.png)
 
-## 5. Recovery to WAN1
+![VPN WAN1 down and WAN2 up](../Images/VPN-WAN1-Down-WAN2-Up.png)
 
-After WAN1 was restored, the recorded routing table showed the preferred default route returning to WAN1:
+![VPN routing before failover](../Images/VPN-Routing-Before-Failover.png)
+
+The screenshots provide evidence of the displayed tunnel and routing states. They do not independently establish that all application sessions continued without interruption.
+
+## 6. Recovery to WAN1
+
+The project contains separate evidence showing the routing path returning to WAN1 after recovery.
+
+![VPN recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png)
+
+The routing evidence for the recovered state is consistent with the WAN1 default route:
 
 ```text
 S* 0.0.0.0/0 [10/0] via 198.51.100.1, port1
 ```
 
-The recovery evidence documents the return to the preferred WAN1 path.
+**Result: PASS — The recorded recovery evidence showed the route returning to the preferred WAN1 path.**
 
-**Result: PASS — Recovery to WAN1 was demonstrated in the recorded test.**
+This result confirms the recorded routing recovery. It does not establish zero packet loss or uninterrupted application sessions during the transition.
 
-![VPN recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png)
+## 7. Routing and Tunnel State Evidence
 
-## 6. Routing and OSPF Evidence
+The available screenshots document multiple stages of the VPN path:
 
-The collected FortiGate routing tables showed remote networks through both tunnel interfaces in their respective captured states.
-
-Examples of the observed remote networks include:
-
-| Destination | Route Type |
+| Evidence File | Purpose |
 |---|---|
-| `10.10.0.0/24` | OSPF Inter-Area |
-| `10.10.1.0/30` | OSPF |
-| `10.10.1.4/30` | OSPF Inter-Area |
-| `10.99.0.0/22` | OSPF External Type 2 |
+| `Images/VPN-Tunnels-Before-Failover.png` | Tunnel state before failover |
+| `Images/VPN-Routing-Before-Failover.png` | Routing state before failover |
+| `Images/VPN-Failover-to-WAN2.png` | Recorded failover state |
+| `Images/VPN-WAN1-Down-WAN2-Up.png` | WAN1/WAN2 tunnel-path state during failover |
+| `Images/VPN-Failover-WAN1-Down-WAN2-Up.png` | Additional failover evidence |
+| `Images/VPN-Recovery-to-WAN1.png` | Recorded recovery state |
+| `Images/VPN-Routing-WAN1-Primary.png` | WAN1-primary routing state |
 
-The collected outputs also showed OSPF neighbor relationships over the displayed tunnel interfaces on `FG-ALEX-01`.
+These images should be interpreted according to the state they display. Similar filenames do not automatically mean that the screenshots are duplicates; compare their contents before removing any evidence from the repository.
 
-**Result: PASS — The recorded routing evidence supports the intended primary/backup VPN path selection.**
+## 8. Verification Scope and Limitations
 
-This result refers to the displayed routing and neighbor evidence; it should not be interpreted as proof that every remote application or network service was tested successfully.
+The recorded evidence supports these conclusions:
 
-## 7. Evidence Inventory
+- The lab has two configured WAN-associated VPN paths.
+- The captured normal routing state showed the WAN1-associated path selected for the listed remote networks.
+- The captured failover state showed the remote routes using the WAN2-associated path.
+- The recorded recovery evidence showed the preferred route returning to WAN1.
+- Separate screenshots document the displayed IPsec tunnel states on both FortiGate appliances.
 
-| Evidence File | What It Documents |
-|---|---|
-| [VPN Tunnels Before Failover](../Images/VPN-Tunnels-Before-Failover.png) | Tunnel status before failover |
-| [VPN Routing Before Failover](../Images/VPN-Routing-Before-Failover.png) | Routing state before failover |
-| [VPN Routing — WAN1 Primary](../Images/VPN-Routing-WAN1-Primary.png) | WAN1 preferred routing state |
-| [VPN WAN1 Down, WAN2 Up](../Images/VPN-WAN1-Down-WAN2-Up.png) | WAN1 failure and WAN2 availability |
-| [VPN Failover — WAN1 Down, WAN2 Up](../Images/VPN-Failover-WAN1-Down-WAN2-Up.png) | Failover state shown in the VPN dashboard |
-| [VPN Failover to WAN2](../Images/VPN-Failover-to-WAN2.png) | Transition to the backup WAN path |
-| [VPN Recovery to WAN1](../Images/VPN-Recovery-to-WAN1.png) | Recovery to the preferred WAN1 path |
+The available evidence does not independently prove:
 
-## 8. Conclusion
+- Zero packet loss during VPN failover or recovery.
+- Uninterrupted application sessions during a path transition.
+- Successful access to every remote network and application through both tunnels.
+- The complete correctness of every IPsec Phase 1 and Phase 2 setting.
+- Successful external HTTPS publishing to the DMZ through both WAN VIPs.
 
-**PASS — VPN tunnel operation, routing through the primary and backup tunnel interfaces, failover to WAN2, and recovery to WAN1 were demonstrated by the recorded lab evidence.**
+External HTTPS publishing is documented separately in [FortiGate Firewall Policies and Connectivity Verification](../Documentation/fortigate-firewall-policies.md).
 
-The collected screenshots and routing outputs document the expected path-selection behavior. The VPN failover and recovery functionality is treated as completed based on the recorded tests.
+Dual-WAN default-route failover and recovery are documented in [Dual-WAN Failover and Recovery Verification](dual-wan-verification.md).
 
-The evidence does not independently establish uninterrupted application sessions during path transitions or successful connectivity for every service between Cairo HQ and Alexandria Branch.
+## 9. Overall Result
 
-The separate external HTTPS publishing issue affecting WAN2-to-DMZ access is documented in `Documentation/fortigate-firewall-policies.md`. It is a separate issue and does not change the recorded VPN failover and recovery results.
+**PASS — VPN routing failover and recovery were demonstrated in the recorded lab evidence.**
+
+The captured routing states show the remote networks using the WAN1-associated VPN path under the recorded normal condition, switching to the WAN2-associated path during failover, and returning to WAN1 during recovery.
+
+These results support the intended redundant VPN routing design. They do not claim that application sessions remained uninterrupted throughout the transitions or that every application was tested through both paths.
+
+The evidence should remain associated with the specific state shown in each screenshot. Any additional claim about application-level continuity requires a corresponding connectivity test.
+
+## 10. Conclusion
+
+The Enterprise Multi-Site Network & Security Infrastructure Lab demonstrates two WAN-associated VPN routing paths between Cairo HQ and Alexandria.
+
+The recorded routing evidence supports failover to WAN2 and recovery to the preferred WAN1 path. Tunnel-state screenshots provide supporting evidence for the displayed VPN states.
+
+Operational validation of uninterrupted traffic, packet-loss measurements during the transitions, and application-level testing through both VPN paths should be reported only when supported by dedicated test results.
+
+The separate external HTTPS publishing issue involving the WAN2 VIP remains unresolved and is not considered fixed by the VPN failover results.
