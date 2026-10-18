@@ -1,0 +1,134 @@
+ALEX-ASBR#sh running-config
+Building configuration...
+
+Current configuration : 1616 bytes
+!
+upgrade fpd auto
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname ALEX-ASBR
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.10.0.178 255.255.255.255
+!
+interface FastEthernet0/0
+ ip address 10.10.1.6 255.255.255.252
+ duplex half
+!
+interface FastEthernet1/0
+ ip address 10.99.0.1 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface FastEthernet1/1
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+!
+router ospf 1
+ router-id 6.6.6.6
+ summary-address 10.99.0.0 255.255.252.0
+ redistribute rip subnets route-map RIP-TO-OSPF
+ network 10.10.0.178 0.0.0.0 area 2
+ network 10.10.1.4 0.0.0.3 area 2
+!
+router rip
+ version 2
+ redistribute ospf 1 metric 2 route-map OSPF-TO-RIP
+ passive-interface FastEthernet0/0
+ passive-interface Loopback0
+ network 10.0.0.0
+ no auto-summary
+!
+ip forward-protocol nd
+no ip http server
+no ip http secure-server
+!
+!
+!
+no cdp log mismatch duplex
+!
+route-map RIP-TO-OSPF permit 10
+ set tag 99
+!
+route-map OSPF-TO-RIP deny 10
+ match tag 99
+!
+route-map OSPF-TO-RIP permit 20
+!
+!
+!
+control-plane
+!
+!
+!
+mgcp profile default
+!
+!
+!
+gatekeeper
+ shutdown
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+ transport input all
+!
+!
+end

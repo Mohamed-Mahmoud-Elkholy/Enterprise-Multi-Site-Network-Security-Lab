@@ -1,0 +1,411 @@
+HQ-CORE-02#sh run
+HQ-CORE-02#sh running-config
+Building configuration...
+
+Current configuration : 4240 bytes
+!
+! Last configuration change at 23:38:02 UTC Thu Oct 15 2026
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+service compress-config
+!
+hostname HQ-CORE-02
+!
+boot-start-marker
+boot-end-marker
+!
+!
+logging discriminator EXCESS severity drops 6 msg-body drops EXCESSCOLL
+logging buffered 50000
+logging console discriminator EXCESS
+!
+no aaa new-model
+!
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+no ip domain-lookup
+no ip cef
+no ipv6 cef
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 10,20,30,50,70 priority 28672
+spanning-tree vlan 40,60,99 priority 24576
+!
+vlan internal allocation policy ascending
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 192.168.1.2 255.255.255.255
+!
+interface Port-channel1
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet0/0
+ switchport access vlan 902
+ switchport mode access
+!
+interface Ethernet0/1
+ switchport access vlan 902
+ switchport mode access
+!
+interface Ethernet0/2
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode passive
+!
+interface Ethernet0/3
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-group 1 mode passive
+!
+interface Ethernet1/0
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet1/1
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet1/2
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet1/3
+ switchport trunk allowed vlan 1-900,903-4094
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet2/0
+!
+interface Ethernet2/1
+!
+interface Ethernet2/2
+!
+interface Ethernet2/3
+!
+interface Ethernet3/0
+!
+interface Ethernet3/1
+!
+interface Ethernet3/2
+!
+interface Ethernet3/3
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan10
+ ip address 192.168.0.3 255.255.255.224
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 10 ip 192.168.0.1
+ standby 10 priority 90
+ standby 10 preempt
+!
+interface Vlan20
+ ip address 192.168.0.35 255.255.255.240
+ standby 20 ip 192.168.0.33
+ standby 20 priority 90
+ standby 20 preempt
+!
+interface Vlan30
+ ip address 192.168.0.51 255.255.255.240
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 30 ip 192.168.0.49
+ standby 30 priority 90
+ standby 30 preempt
+!
+interface Vlan40
+ ip address 192.168.0.67 255.255.255.240
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 40 ip 192.168.0.65
+ standby 40 priority 110
+ standby 40 preempt
+!
+interface Vlan50
+ ip address 192.168.0.83 255.255.255.240
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 50 ip 192.168.0.81
+ standby 50 priority 90
+ standby 50 preempt
+!
+interface Vlan60
+ ip address 192.168.0.99 255.255.255.248
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 60 ip 192.168.0.97
+ standby 60 priority 110
+ standby 60 preempt
+!
+interface Vlan70
+ ip address 192.168.0.107 255.255.255.248
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 70 ip 192.168.0.105
+ standby 70 priority 90
+ standby 70 preempt
+!
+interface Vlan99
+ ip address 192.168.0.115 255.255.255.240
+ ip helper-address 192.168.0.36
+ ip helper-address 192.168.0.37
+ standby 99 ip 192.168.0.113
+ standby 99 priority 110
+ standby 99 preempt
+!
+interface Vlan902
+ ip address 192.168.0.137 255.255.255.252
+!
+router ospf 1
+ router-id 2.2.2.2
+ area 1 range 192.168.0.0 255.255.255.128
+ network 192.168.0.0 0.0.0.127 area 1
+ network 192.168.0.136 0.0.0.3 area 0
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 192.168.0.138
+!
+!
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login
+!
+!
+end
+
+HQ-CORE-02#
+
+HQ-CORE-02#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+Ethernet0/0            unassigned      YES unset  up                    up
+Ethernet0/1            unassigned      YES unset  up                    up
+Ethernet0/2            unassigned      YES unset  up                    up
+Ethernet0/3            unassigned      YES unset  up                    up
+Ethernet1/0            unassigned      YES unset  up                    up
+Ethernet1/1            unassigned      YES unset  up                    up
+Ethernet1/2            unassigned      YES unset  up                    up
+Ethernet1/3            unassigned      YES unset  up                    up
+Ethernet2/0            unassigned      YES unset  up                    up
+Ethernet2/1            unassigned      YES unset  up                    up
+Ethernet2/2            unassigned      YES unset  up                    up
+Ethernet2/3            unassigned      YES unset  up                    up
+Ethernet3/0            unassigned      YES unset  up                    up
+Ethernet3/1            unassigned      YES unset  up                    up
+Ethernet3/2            unassigned      YES unset  up                    up
+Ethernet3/3            unassigned      YES unset  up                    up
+Loopback0              192.168.1.2     YES NVRAM  up                    up
+Port-channel1          unassigned      YES unset  up                    up
+Vlan1                  unassigned      YES unset  administratively down down
+Vlan10                 192.168.0.3     YES NVRAM  up                    up
+Vlan20                 192.168.0.35    YES NVRAM  up                    up
+
+HQ-CORE-02#how vlan brief
+            ^
+% Invalid input detected at '^' marker.
+
+HQ-CORE-02#show interfaces trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Et1/0       on               802.1q         trunking      1
+Et1/1       on               802.1q         trunking      1
+Et1/2       on               802.1q         trunking      1
+Et1/3       on               802.1q         trunking      1
+Po1         on               802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Et1/0       1-900,903-4094
+Et1/1       1-900,903-4094
+Et1/2       1-900,903-4094
+Et1/3       1-900,903-4094
+Po1         1-900,903-4094
+
+Port        Vlans allowed and active in management domain
+Et1/0       1,10,20,30,40,50,60,70,99
+Et1/1       1,10,20,30,40,50,60,70,99
+Et1/2       1,10,20,30,40,50,60,70,99
+Et1/3       1,10,20,30,40,50,60,70,99
+Po1         1,10,20,30,40,50,60,70,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+
+HQ-CORE-02#how etherchannel summary
+            ^
+% Invalid input detected at '^' marker.
+
+HQ-CORE-02#show spanning-tree summary
+Switch is in rapid-pvst mode
+Root bridge for: VLAN0040, VLAN0060, VLAN0099, VLAN0902
+Extended system ID                      is enabled
+Portfast Default                        is disabled
+Portfast Edge BPDU Guard Default        is disabled
+Portfast Edge BPDU Filter Default       is disabled
+Loopguard Default                       is disabled
+PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
+Bridge Assurance                        is enabled
+EtherChannel misconfig guard            is enabled
+Configured Pathcost method used is short
+UplinkFast                              is disabled
+BackboneFast                            is disabled
+
+Name                   Blocking Listening Learning Forwarding STP Active
+---------------------- -------- --------- -------- ---------- ----------
+VLAN0001                     0         0        0         13         13
+VLAN0010                     0         0        0          5          5
+VLAN0020                     0         0        0          5          5
+VLAN0030                     0         0        0          5          5
+VLAN0040                     0         0        0          5          5
+
+HQ-CORE-02#how standby brief
+            ^
+% Invalid input detected at '^' marker.
+
+HQ-CORE-02#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+3.3.3.3           1   FULL/DR         00:00:34    192.168.0.138   Vlan902
+1.1.1.1           1   FULL/BDR        00:00:33    192.168.0.114   Vlan99
+1.1.1.1           1   FULL/BDR        00:00:35    192.168.0.106   Vlan70
+1.1.1.1           1   FULL/BDR        00:00:32    192.168.0.98    Vlan60
+1.1.1.1           1   FULL/BDR        00:00:32    192.168.0.82    Vlan50
+1.1.1.1           1   FULL/BDR        00:00:35    192.168.0.66    Vlan40
+1.1.1.1           1   FULL/BDR        00:00:34    192.168.0.50    Vlan30
+1.1.1.1           1   FULL/BDR        00:00:32    192.168.0.34    Vlan20
+1.1.1.1           1   FULL/BDR        00:00:32    192.168.0.2     Vlan10
+HQ-CORE-02#show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 192.168.0.138 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 192.168.0.138
+      10.0.0.0/30 is subnetted, 1 subnets
+O        10.10.1.0 [110/12] via 192.168.0.138, 03:40:05, Vlan902
+      172.16.0.0/32 is subnetted, 4 subnets
+O        172.16.0.1 [110/1] via 192.168.0.138, 04:22:24, Vlan902
+O        172.16.0.2 [110/11] via 192.168.0.138, 03:40:05, Vlan902
+O        172.16.0.5 [110/1] via 192.168.0.138, 04:22:24, Vlan902
+O        172.16.0.6 [110/11] via 192.168.0.138, 03:40:05, Vlan902
+      192.168.0.0/24 is variably subnetted, 21 subnets, 6 masks
+O        192.168.0.0/25 is a summary, 04:23:21, Null0
+
+HQ-CORE-02#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 2.2.2.2
+  It is an area border router
+  Number of areas in this router is 2. 2 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    192.168.0.0 0.0.0.127 area 1
+    192.168.0.136 0.0.0.3 area 0
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    5.5.5.5              110      04:00:49
+    4.4.4.4              110      03:40:12
+    3.3.3.3              110      04:22:31
+    2.2.2.2              110      04:23:27
+  Distance: (default is 110)
+
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#
+HQ-CORE-02#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State   Active          Standby         Virtual IP
+Vl10        10   90  P Standby 192.168.0.2     local           192.168.0.1
+Vl20        20   90  P Standby 192.168.0.34    local           192.168.0.33
+Vl30        30   90  P Standby 192.168.0.50    local           192.168.0.49
+Vl40        40   110 P Active  local           192.168.0.66    192.168.0.65
+Vl50        50   90  P Standby 192.168.0.82    local           192.168.0.81
+Vl60        60   110 P Active  local           192.168.0.98    192.168.0.97
+Vl70        70   90  P Standby 192.168.0.106   local           192.168.0.105
+Vl99        99   110 P Active  local           192.168.0.114   192.168.0.113
+HQ-CORE-02#
+

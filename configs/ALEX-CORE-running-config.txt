@@ -1,0 +1,322 @@
+ALEX-CORE#sh running-config
+Building configuration...
+
+Current configuration : 2383 bytes
+!
+! Last configuration change at 23:38:06 UTC Thu Oct 15 2026
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+service compress-config
+!
+hostname ALEX-CORE
+!
+boot-start-marker
+boot-end-marker
+!
+!
+logging discriminator EXCESS severity drops 6 msg-body drops EXCESSCOLL
+logging buffered 50000
+logging console discriminator EXCESS
+!
+no aaa new-model
+!
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+no ip domain-lookup
+no ip cef
+no ipv6 cef
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+vlan internal allocation policy ascending
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.10.0.177 255.255.255.255
+!
+interface Ethernet0/0
+ no switchport
+ ip address 10.10.1.1 255.255.255.252
+ duplex auto
+!
+interface Ethernet0/1
+ no switchport
+ ip address 10.10.1.5 255.255.255.252
+ duplex auto
+!
+interface Ethernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface Ethernet0/3
+!
+interface Ethernet1/0
+!
+interface Ethernet1/1
+!
+interface Ethernet1/2
+!
+interface Ethernet1/3
+!
+interface Ethernet2/0
+!
+interface Ethernet2/1
+!
+interface Ethernet2/2
+!
+interface Ethernet2/3
+!
+interface Ethernet3/0
+!
+interface Ethernet3/1
+!
+interface Ethernet3/2
+!
+interface Ethernet3/3
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan10
+ ip address 10.10.0.2 255.255.255.128
+ ip helper-address 10.10.0.131
+!
+interface Vlan20
+ ip address 10.10.0.130 255.255.255.224
+!
+interface Vlan30
+ ip address 10.10.0.193 255.255.255.240
+ ip helper-address 10.10.0.131
+!
+interface Vlan99
+ ip address 10.10.0.162 255.255.255.240
+ ip helper-address 10.10.0.131
+!
+router ospf 1
+ router-id 5.5.5.5
+ area 2 range 10.10.0.0 255.255.255.0
+ passive-interface Loopback0
+ passive-interface Vlan10
+ passive-interface Vlan20
+ passive-interface Vlan99
+ network 10.10.0.0 0.0.0.127 area 2
+ network 10.10.0.128 0.0.0.31 area 2
+ network 10.10.0.160 0.0.0.15 area 2
+ network 10.10.0.177 0.0.0.0 area 2
+ network 10.10.1.0 0.0.0.3 area 0
+ network 10.10.1.4 0.0.0.3 area 2
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 10.10.1.2
+!
+!
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login
+!
+!
+end
+
+
+ALEX-CORE#show spanning-tree summary
+Switch is in rapid-pvst mode
+Root bridge for: VLAN0001, VLAN0010, VLAN0020, VLAN0030, VLAN0099
+Extended system ID                      is enabled
+Portfast Default                        is disabled
+Portfast Edge BPDU Guard Default        is disabled
+Portfast Edge BPDU Filter Default       is disabled
+Loopguard Default                       is disabled
+PVST Simulation Default                 is enabled but inactive in rapid-pvst mode
+Bridge Assurance                        is enabled
+EtherChannel misconfig guard            is enabled
+Configured Pathcost method used is short
+UplinkFast                              is disabled
+BackboneFast                            is disabled
+
+Name                   Blocking Listening Learning Forwarding STP Active
+---------------------- -------- --------- -------- ---------- ----------
+VLAN0001                     0         0       14          0         14
+VLAN0010                     0         0        1          0          1
+VLAN0020                     0         0        1          0          1
+VLAN0030                     0         0        1          0          1
+VLAN0099                     0         0        1          0          1
+
+ALEX-CORE#how standby brief
+           ^
+% Invalid input detected at '^' marker.
+
+ALEX-CORE#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+4.4.4.4           1   FULL/DR         00:00:36    10.10.1.2       Ethernet0/0
+ALEX-CORE#show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override
+
+Gateway of last resort is 10.10.1.2 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.10.1.2
+      10.0.0.0/8 is variably subnetted, 6 subnets, 3 masks
+O        10.10.0.0/24 is a summary, 00:00:20, Null0
+C        10.10.0.177/32 is directly connected, Loopback0
+C        10.10.1.0/30 is directly connected, Ethernet0/0
+L        10.10.1.1/32 is directly connected, Ethernet0/0
+C        10.10.1.4/30 is directly connected, Ethernet0/1
+L        10.10.1.5/32 is directly connected, Ethernet0/1
+      172.16.0.0/32 is subnetted, 4 subnets
+O        172.16.0.1 [110/20] via 10.10.1.2, 00:00:07, Ethernet0/0
+
+ALEX-CORE#show ip protocols
+*** IP Routing is NSF aware ***
+
+Routing Protocol is "application"
+  Sending updates every 0 seconds
+  Invalid after 0 seconds, hold down 0, flushed after 0
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Maximum path: 32
+  Routing for Networks:
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+  Distance: (default is 4)
+
+Routing Protocol is "ospf 1"
+  Outgoing update filter list for all interfaces is not set
+  Incoming update filter list for all interfaces is not set
+  Router ID 5.5.5.5
+  It is an area border router
+  Number of areas in this router is 2. 2 normal 0 stub 0 nssa
+  Maximum path: 4
+  Routing for Networks:
+    10.10.0.0 0.0.0.127 area 2
+    10.10.0.128 0.0.0.31 area 2
+    10.10.0.160 0.0.0.15 area 2
+    10.10.0.177 0.0.0.0 area 2
+    10.10.1.0 0.0.0.3 area 0
+    10.10.1.4 0.0.0.3 area 2
+  Passive Interface(s):
+    Loopback0
+    Vlan10
+    Vlan20
+    Vlan99
+  Routing Information Sources:
+    Gateway         Distance      Last Update
+    2.2.2.2              110      00:00:16
+    4.4.4.4              110      00:00:16
+    3.3.3.3              110      00:00:16
+    5.5.5.5              110      00:00:28
+  Distance: (default is 110)
+
+ALEX-CORE#
+ALEX-CORE#
+ALEX-CORE#
+ALEX-CORE#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+Ethernet0/0            10.10.1.1       YES NVRAM  up                    up
+Ethernet0/1            10.10.1.5       YES NVRAM  up                    up
+Ethernet0/2            unassigned      YES unset  up                    up
+Ethernet0/3            unassigned      YES unset  up                    up
+Ethernet1/0            unassigned      YES unset  up                    up
+Ethernet1/1            unassigned      YES unset  up                    up
+Ethernet1/2            unassigned      YES unset  up                    up
+Ethernet1/3            unassigned      YES unset  up                    up
+Ethernet2/0            unassigned      YES unset  up                    up
+Ethernet2/1            unassigned      YES unset  up                    up
+Ethernet2/2            unassigned      YES unset  up                    up
+Ethernet2/3            unassigned      YES unset  up                    up
+Ethernet3/0            unassigned      YES unset  up                    up
+Ethernet3/1            unassigned      YES unset  up                    up
+Ethernet3/2            unassigned      YES unset  up                    up
+Ethernet3/3            unassigned      YES unset  up                    up
+Loopback0              10.10.0.177     YES NVRAM  up                    up
+Vlan1                  unassigned      YES unset  administratively down down
+Vlan10                 10.10.0.2       YES NVRAM  up                    up
+Vlan20                 10.10.0.130     YES NVRAM  up                    up
+Vlan30                 10.10.0.193     YES NVRAM  up                    up
+
+ALEX-CORE#how vlan brief
+           ^
+% Invalid input detected at '^' marker.
+
+ALEX-CORE#show interfaces trunk
+
+Port        Mode             Encapsulation  Status        Native vlan
+Et0/2       on               802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Et0/2       1-4094
+
+Port        Vlans allowed and active in management domain
+Et0/2       1,10,20,30,99
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Et0/2       1,10,20,30,99
+ALEX-CORE#show vlan brief
+
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Et0/3, Et1/0, Et1/1, Et1/2
+                                                Et1/3, Et2/0, Et2/1, Et2/2
+                                                Et2/3, Et3/0, Et3/1, Et3/2
+                                                Et3/3
+10   USERS                            active
+20   SERVERS                          active
+30   SALES                            active
+99   MANAGEMENT                       active
+1002 fddi-default                     act/unsup
+1003 token-ring-default               act/unsup
+1004 fddinet-default                  act/unsup
+1005 trnet-default                    act/unsup
+ALEX-CORE#
+
+
