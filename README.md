@@ -96,7 +96,7 @@ The collected recovery evidence shows 0% packet loss on both WAN monitors at the
 
 These results document the observed failover and recovery behavior; they do not imply zero interruption during the transition.
 
-[Read the Dual-WAN Failover Verification](Verification/dual-wan-failover.md)
+[Read the Dual-WAN Failover Verification](Verification/dual-wan-verification.md)
 
 ### 2. FortiGate High Availability
 
