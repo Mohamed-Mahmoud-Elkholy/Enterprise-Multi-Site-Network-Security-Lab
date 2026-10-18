@@ -143,12 +143,4 @@ The evidence demonstrates default-route failover and recovery. It does not indep
 | [Failover to WAN2](../Images/Dual-WAN-Failover-to-WAN2.png) | Default route switched to WAN2 |
 | [WAN2 Ping Success](../Images/Dual-WAN-Ping-WAN2-Success.png) | Successful ping to WAN2 monitor target |
 | [Recovery to WAN1](../Images/Dual-WAN-Recovery-to-WAN1.png) | Default route returned to WAN1 |
-| [WAN1 Ping After Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png) | Successful ping after recovery |
-
-## 6. Overall Result
-
-**PASS — Dual-WAN default-route failover and recovery were demonstrated in the recorded lab tests.**
-
-The captured evidence shows the default route switching from WAN1 to WAN2 during the WAN1 failure and returning to WAN1 after recovery. Both monitor targets were reachable in their recorded tests, and the recovered-state monitor output showed zero packet loss for both paths.
-
-This result confirms the demonstrated primary/backup routing behavior. It does not claim that application sessions remained uninterrupted throughout the transition or that every possible Internet failure scenario has been tested.
+| [WAN1 Ping After Recovery](../Images/Dual-WAN-Ping-WAN1-Recovery.png
