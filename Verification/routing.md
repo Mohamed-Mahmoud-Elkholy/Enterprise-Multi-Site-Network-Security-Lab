@@ -37,7 +37,7 @@ The default route points toward `192.168.0.130` through the FortiGate transit co
 
 **Result: PASS.** A static default route toward the FortiGate was present in the routing table.
 
-Internet failover is documented separately in `dual-wan-failover.md`.
+Internet failover and recovery are documented separately in [Dual-WAN Verification](dual-wan-verification.md).
 
 ### 3.2 Remote Routes
 
@@ -164,7 +164,7 @@ The following are separate from these routing-table results:
 - Uninterrupted application sessions during route transitions.
 - External HTTPS access to the DMZ through both WAN VIPs.
 
-Dual-WAN failover and recovery results are documented in `dual-wan-failover.md`. VPN implementation and its verification are documented in `ipsec-vpn.md`.
+Dual-WAN failover and recovery results are documented in [Dual-WAN Verification](dual-wan-verification.md). VPN implementation and verification are documented in [IPsec VPN Verification](ipsec-vpn.md).
 
 ## 8. Conclusion
 
