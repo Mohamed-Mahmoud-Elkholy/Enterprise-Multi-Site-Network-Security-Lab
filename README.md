@@ -228,7 +228,7 @@ Enterprise-Multi-Site-Network-Security-Lab/
 ├── configs/
 │   └── README.md
 └── Verification/
-    ├── dual-wan-failover.md
+    ├── dual-wan-verification.md
     ├── fortigate-ha-verification.md
     ├── ipsec-vpn.md
     └── routing.md
