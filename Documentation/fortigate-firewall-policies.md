@@ -138,7 +138,7 @@ The lab also has separate verification evidence for Dual-WAN default-route failo
 
 This routing result does not independently prove that every Internet access policy has been tested separately or that every application works through both WANs.
 
-See [Dual-WAN Failover Verification](../Verification/dual-wan-failover.md).
+See [Dual-WAN Failover Verification](../Verification/dual-wan-verification.md).
 
 ## 6. Inter-Site Traffic and VPN Policies
 
